@@ -55,13 +55,14 @@
     pointer-events: none;
   }
 
-  /* Velo: degradado radial oscuro inferior izquierdo + fundido inferior a #0B140C */
+  /* Velo: degradado superior nav + radial oscuro inferior izquierdo + fundido inferior a #0B140C */
   .portada__velo {
     position: absolute;
     inset: 0;
     z-index: 2;
     pointer-events: none;
     background:
+      linear-gradient(to bottom, rgba(11, 20, 12, 0.45) 0px, transparent 140px),
       radial-gradient(ellipse 85% 85% at 15% 85%, rgba(11, 20, 12, 0.94) 0%, rgba(11, 20, 12, 0.6) 50%, transparent 80%),
       linear-gradient(to bottom, transparent 70%, #0B140C 100%);
   }
@@ -152,15 +153,26 @@
     font-family: var(--f-mono);
     font-size: 0.72rem;
     letter-spacing: 0.2em;
-    color: #C4BEAF;
   }
 
-  .portada__nav-enlaces a {
-    transition: color 0.2s;
-  }
-
-  .portada__nav-enlaces a:hover {
+  .portada__nav-enlaces a,
+  .portada__nav-ingresar {
     color: #F4EFE1;
+    opacity: 0.9;
+    font-weight: 500;
+    text-shadow: 0 1px 12px rgba(11, 20, 12, 0.55);
+    transition: opacity 0.2s, color 0.2s, text-decoration 0.2s;
+    text-decoration: none;
+  }
+
+  .portada__nav-enlaces a:hover,
+  .portada__nav-ingresar:hover {
+    opacity: 1;
+    color: #F4EFE1;
+    text-decoration: underline;
+    text-decoration-color: #E0B04A;
+    text-underline-offset: 4px;
+    text-decoration-thickness: 1px;
   }
 
   .portada__nav-acciones {
@@ -172,12 +184,6 @@
   .portada__nav-ingresar {
     font-family: var(--f-texto);
     font-size: 0.88rem;
-    color: #F4EFE1;
-    transition: color 0.2s;
-  }
-
-  .portada__nav-ingresar:hover {
-    color: #F2C972;
   }
 
   .portada__nav-boton-reservar {
@@ -323,7 +329,7 @@
 
   .portada__avatar:first-child { margin-left: 0; }
   /* Recortes exactos para los avatares (~1400% auto) */
-  .avatar-1 { background-size: 1400% auto; background-position: 50.5% 25%; } /* Cara */
+  .avatar-1 { background-size: auto 600%; background-position: 50.5% 25.5%; } /* Cara centrada */
   .avatar-2 { background-size: 1400% auto; background-position: 50% 45%; }   /* Pecho dorado */
   .avatar-3 { background-size: 1400% auto; background-position: 50% 82%; }   /* Cola */
 
@@ -359,7 +365,7 @@
   }
 
   /* Recortes de primeros planos en miniaturas de tarjetas */
-  .thumb-1 { background-size: 1000% auto; background-position: 50.5% 25%; } /* Cara */
+  .thumb-1 { background-size: auto 600%; background-position: 50.5% 25.5%; } /* Cara centrada (~60% alto) */
   .thumb-2 { background-size: 900% auto; background-position: 50% 84%; }    /* Cola enroscada */
 
   .tarjeta-vidrio__info {
@@ -478,58 +484,122 @@
     gap: 1rem;
   }
 
-  /* Responsive Móvil (max-width: 768px) */
-  @media (max-width: 768px) {
-    /* Velo reforzado en móvil: degradado lineal de transparente a 40% del alto hasta #0B140C a 92% abajo */
+  /* Responsive Móvil (hasta 700px) */
+  @media (max-width: 700px) {
+    .portada {
+      height: auto;
+      min-height: 100vh;
+      min-height: 100svh;
+      display: flex;
+      flex-direction: column;
+      overflow: visible;
+      background: #0B140C;
+      position: relative;
+    }
+
+    /* Caja de medios (video, final, recorte) en los primeros 62svh */
+    .portada__medio {
+      height: 62svh;
+      width: 100%;
+      object-fit: cover;
+      object-position: 50% 30%;
+    }
+
+    /* Velo de 62svh con degradado inferior (últimos 25%) hacia #0B140C */
     .portada__velo {
+      height: 62svh;
+      bottom: auto;
       background:
-        radial-gradient(ellipse 85% 85% at 15% 85%, rgba(11, 20, 12, 0.96) 0%, rgba(11, 20, 12, 0.7) 50%, transparent 80%),
-        linear-gradient(to bottom, transparent 40%, #0B140C 92%);
+        linear-gradient(to bottom, rgba(11, 20, 12, 0.5) 0px, transparent 100px),
+        linear-gradient(to bottom, transparent 75%, #0B140C 100%);
     }
 
-    /* Subir título gigante para que su centro quede a ~34% del alto (a la altura del pecho) */
+    /* Título "MONO" centrado en la caja de 62svh a la altura del pecho */
     .portada__titulo-caja {
-      align-items: flex-start;
-      padding-top: 26vh;
+      height: 62svh;
+      bottom: auto;
+      align-items: center;
+      justify-content: center;
+      padding-top: 0;
     }
 
-    /* Título adaptado a móvil */
     .portada__titulo-gigante {
-      font-size: clamp(72px, 24vw, 160px);
+      font-size: clamp(60px, 22vw, 130px);
     }
 
-    /* Mostrar nav con marca + botón RESERVAR */
+    /* Interfaz en flujo vertical debajo de la caja de medios */
+    .portada__interfaz {
+      position: relative;
+      inset: auto;
+      height: auto;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .portada__nav {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 10;
+      padding: 1rem 20px;
+      box-sizing: border-box;
+    }
+
     .portada__nav-enlaces,
     .portada__nav-ingresar {
       display: none;
     }
 
     .portada__cuerpo {
+      margin-top: 62svh;
+      padding: 1.5rem 20px 2.5rem 20px;
+      box-sizing: border-box;
       flex-direction: column;
       align-items: flex-start;
-      gap: 1.2rem;
+      gap: 1.5rem;
+      background: #0B140C;
+      width: 100%;
     }
 
     .portada__editorial {
       align-items: flex-start;
       text-align: left;
+      width: 100%;
+      max-width: 100%;
+      gap: 0.8rem;
     }
 
     .portada__editorial-titular {
-      font-size: 2.1rem;
+      font-size: 2.2rem;
     }
 
     .portada__panel-derecho {
       align-items: flex-start;
       width: 100%;
+      gap: 1.2rem;
+    }
+
+    .portada__boton-repetir {
+      order: 1;
+    }
+
+    .portada__exploradores {
+      order: 2;
     }
 
     .portada__tarjetas {
-      display: none;
+      order: 3;
+      display: flex;
+      flex-direction: row;
+      gap: 0.8rem;
+      width: 100%;
     }
 
-    .portada__medio {
-      object-position: 50% 35%;
+    .tarjeta-vidrio {
+      flex: 1;
+      width: auto;
     }
   }
 </style>
