@@ -22,6 +22,7 @@
     height: 100vh;
     height: 100svh;
     min-height: 600px;
+    margin-top: 0 !important; /* Anular margen negativo de secciones.css para que el nav no se corte arriba */
     overflow: hidden;
     background: #0B140C;
     isolation: isolate;
@@ -65,29 +66,32 @@
       linear-gradient(to bottom, transparent 70%, #0B140C 100%);
   }
 
-  /* Título Gigante "MONO" detrás del animal */
+  /* Título Gigante "MONO" detrás del animal.
+     El contenedor (.portada__titulo-caja) maneja el parallax con el puntero via translate.
+     El h1 (.portada__titulo-gigante) maneja la animación de entrada (opacity + translateY) */
   .portada__titulo-caja {
     position: absolute;
     inset: 0;
     z-index: 3;
-    display: grid;
-    place-items: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     pointer-events: none;
     will-change: transform;
   }
 
   .portada__titulo-gigante {
     font-family: var(--f-gigante);
-    font-size: clamp(120px, 30vw, 520px);
+    font-size: clamp(88px, 22vw, 380px);
     line-height: 0.82;
     letter-spacing: -0.04em;
     color: #F4EFE1;
     margin: 0;
     text-transform: uppercase;
     text-align: center;
-    width: 80%;
-    max-width: 100vw;
-    /* Arranca invisible */
+    white-space: nowrap;
+    width: max-content;
+    /* Arranca invisible con animación independiente */
     opacity: 0;
     transform: translateY(40px);
     transition: opacity 900ms cubic-bezier(0.16, 1, 0.3, 1), transform 900ms cubic-bezier(0.16, 1, 0.3, 1);
@@ -210,7 +214,10 @@
 
   .portada__editorial {
     max-width: 30rem;
-    display: grid;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
     gap: 0.75rem;
     color: #F4EFE1;
   }
@@ -222,6 +229,7 @@
     color: #F2C972;
     margin: 0;
     text-transform: uppercase;
+    text-align: left;
   }
 
   .portada__editorial-titular {
@@ -231,6 +239,7 @@
     line-height: 1.05;
     color: #F4EFE1;
     margin: 0;
+    text-align: left;
   }
 
   .portada__editorial-titular em {
@@ -243,10 +252,8 @@
     line-height: 1.5;
     color: #C4BEAF;
     margin: 0;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+    text-align: left;
+    max-width: 28rem;
   }
 
   .portada__editorial-acciones {
@@ -311,14 +318,14 @@
     border-radius: 50%;
     border: 2px solid #0B140C;
     background-image: url('medios/mono-final.jpg');
-    background-size: 380%;
     margin-left: -10px;
   }
 
   .portada__avatar:first-child { margin-left: 0; }
-  .avatar-1 { background-position: 50% 32%; }
-  .avatar-2 { background-position: 52% 38%; }
-  .avatar-3 { background-position: 48% 45%; }
+  /* Recortes exactos para los avatares (~1400% auto) */
+  .avatar-1 { background-size: 1400% auto; background-position: 50.5% 25%; } /* Cara */
+  .avatar-2 { background-size: 1400% auto; background-position: 50% 45%; }   /* Pecho dorado */
+  .avatar-3 { background-size: 1400% auto; background-position: 50% 82%; }   /* Cola */
 
   .portada__exploradores-texto {
     font-size: 0.8rem;
@@ -349,11 +356,11 @@
     height: 64px;
     border-radius: 8px;
     background-image: url('medios/mono-final.jpg');
-    background-size: 260%;
   }
 
-  .thumb-1 { background-position: 50% 30%; }
-  .thumb-2 { background-position: 50% 55%; }
+  /* Recortes de primeros planos en miniaturas de tarjetas */
+  .thumb-1 { background-size: 1000% auto; background-position: 50.5% 25%; } /* Cara */
+  .thumb-2 { background-size: 900% auto; background-position: 50% 84%; }    /* Cola enroscada */
 
   .tarjeta-vidrio__info {
     display: flex;
@@ -473,6 +480,25 @@
 
   /* Responsive Móvil (max-width: 768px) */
   @media (max-width: 768px) {
+    /* Velo reforzado en móvil: degradado lineal de transparente a 40% del alto hasta #0B140C a 92% abajo */
+    .portada__velo {
+      background:
+        radial-gradient(ellipse 85% 85% at 15% 85%, rgba(11, 20, 12, 0.96) 0%, rgba(11, 20, 12, 0.7) 50%, transparent 80%),
+        linear-gradient(to bottom, transparent 40%, #0B140C 92%);
+    }
+
+    /* Subir título gigante para que su centro quede a ~34% del alto (a la altura del pecho) */
+    .portada__titulo-caja {
+      align-items: flex-start;
+      padding-top: 26vh;
+    }
+
+    /* Título adaptado a móvil */
+    .portada__titulo-gigante {
+      font-size: clamp(72px, 24vw, 160px);
+    }
+
+    /* Mostrar nav con marca + botón RESERVAR */
     .portada__nav-enlaces,
     .portada__nav-ingresar {
       display: none;
@@ -481,7 +507,16 @@
     .portada__cuerpo {
       flex-direction: column;
       align-items: flex-start;
-      gap: 1.5rem;
+      gap: 1.2rem;
+    }
+
+    .portada__editorial {
+      align-items: flex-start;
+      text-align: left;
+    }
+
+    .portada__editorial-titular {
+      font-size: 2.1rem;
     }
 
     .portada__panel-derecho {
@@ -491,15 +526,6 @@
 
     .portada__tarjetas {
       display: none;
-    }
-
-    .portada__titulo-gigante {
-      font-size: clamp(80px, 26vw, 220px);
-      width: 95%;
-    }
-
-    .portada__editorial-titular {
-      font-size: 2.2rem;
     }
 
     .portada__medio {
@@ -693,8 +719,12 @@
   elBtnRepetir.addEventListener("click", () => {
     congelado = false;
     elPortada.classList.remove("es-congelado");
-    // Resetear posición del título
+    // Resetear posición de parallax del contenedor
     elTituloCaja.style.transform = "none";
+    targetX = 0;
+    targetY = 0;
+    currentX = 0;
+    currentY = 0;
     portadaControl.reproducir();
   });
 
@@ -704,8 +734,7 @@
   }
 
   // Interacción sutil con el puntero SOLO después de congelar:
-  // El título gigante se desplaza unos pocos px (max 10px) opuesto al cursor con suavizado.
-  // El recorte y la imagen final NO se mueven.
+  // Aplicar parallax AL CONTENEDOR .portada__titulo-caja para no interrumpir la transición del h1.
   let targetX = 0;
   let targetY = 0;
   let currentX = 0;
@@ -713,7 +742,7 @@
   let animFrame = null;
 
   function loopPuntero() {
-    if (congelado) {
+    if (congelado && !reducido()) {
       currentX = amortiguar(currentX, targetX, 0.1, 1 / 60);
       currentY = amortiguar(currentY, targetY, 0.1, 1 / 60);
       elTituloCaja.style.transform = `translate(${currentX.toFixed(2)}px, ${currentY.toFixed(2)}px)`;
