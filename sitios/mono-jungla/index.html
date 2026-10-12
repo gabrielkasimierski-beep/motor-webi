@@ -1,0 +1,510 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mono en la Jungla — Motor webi</title>
+
+<!-- Tipografías de Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Instrument+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Hojas de estilo del kit -->
+<link rel="stylesheet" href="./kit/tokens.css">
+<link rel="stylesheet" href="./kit/secciones.css">
+<link rel="stylesheet" href="./kit/componentes/boton-vidrio/boton-vidrio.css">
+
+<style>
+  /* --- Personalización de Marca en Tokens --- */
+  :root {
+    --tinta: #08120e;
+    --tinta-2: #0e1c17;
+    --superficie: #14261f;
+    --acento: #34d399;
+    --acento-claro: #a7f3d0;
+    --acento-hondo: #059669;
+    --sobre-acento: #022c22;
+  }
+
+  /* --- Capa de Escena Fija --- */
+  .escena-jungla {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    height: 100svh;
+    overflow: hidden;
+    background: var(--tinta);
+  }
+
+  /* Canvas de fondo con Shader */
+  .canvas-fondo {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  /* Capa de Luciérnagas Nocturnas */
+  .luciernagas-capa {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity var(--d-larga) var(--curva-salida);
+  }
+
+  .luciernaga {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #fef08a;
+    box-shadow: 0 0 10px #fde047, 0 0 20px #34d399;
+    animation: titilar 4s infinite ease-in-out;
+  }
+
+  @keyframes titilar {
+    0%, 100% { opacity: 0.2; transform: scale(0.8) translateY(0); }
+    50% { opacity: 1; transform: scale(1.4) translateY(-15px); }
+  }
+
+  /* Canvas del Mono (Película por Cuadros) */
+  .canvas-mono {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 3;
+  }
+
+  /* Capa de Contenido / Capítulos sobre la Escena */
+  .capitulos-capa {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    pointer-events: none;
+    display: grid;
+    place-items: center;
+    padding: var(--margen);
+  }
+
+  .tarjeta-capitulo {
+    max-width: 28rem;
+    padding: 1.8rem 2rem;
+    border-radius: var(--r-grande);
+    background: color-mix(in srgb, var(--tinta-2) 75%, transparent);
+    border: 1px solid color-mix(in srgb, var(--acento) 25%, transparent);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    opacity: 0;
+    transform: translateY(20px) scale(0.96);
+    transition: opacity 0.5s var(--curva-salida), transform 0.5s var(--curva-salida);
+    pointer-events: auto;
+    text-align: left;
+  }
+
+  .tarjeta-capitulo.es-activa {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  .tarjeta-capitulo .titulo-cap {
+    font-family: var(--f-titulo);
+    font-size: var(--t-medio);
+    font-weight: 800;
+    color: var(--hueso);
+    margin-block: 0.4rem 0.6rem;
+  }
+
+  /* Posicionamiento dinámico alternado para no tapar al mono */
+  .tarjeta-capitulo[data-pos="izquierda"] { margin-right: auto; }
+  .tarjeta-capitulo[data-pos="derecha"] { margin-left: auto; }
+  .tarjeta-capitulo[data-pos="centro"] { margin-inline: auto; text-align: center; }
+
+  /* Ancla / Llamada flotante enganchada al mono */
+  .llamada-ancla {
+    position: absolute;
+    z-index: 5;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    transform: translate(-50%, -100%);
+    opacity: 0;
+    transition: opacity 0.3s var(--curva-salida);
+  }
+
+  .llamada-ancla.es-activa { opacity: 1; }
+
+  .llamada-linea {
+    width: 2px;
+    height: 28px;
+    background: linear-gradient(to top, var(--acento), transparent);
+  }
+
+  .llamada-caja {
+    padding: 0.35rem 0.75rem;
+    background: color-mix(in srgb, var(--tinta) 85%, transparent);
+    border: 1px solid var(--acento);
+    border-radius: var(--r-chico);
+    font: 500 var(--t-etiqueta)/1.2 var(--f-mono);
+    color: var(--acento-claro);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    white-space: nowrap;
+  }
+
+  /* Indicador de fase del día arriba a la derecha */
+  .indicador-dia {
+    position: fixed;
+    top: 1.2rem;
+    right: 1.2rem;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.85rem;
+    border-radius: var(--r-pastilla);
+    background: color-mix(in srgb, var(--tinta-2) 80%, transparent);
+    border: 1px solid var(--linea-fuerte);
+    backdrop-filter: blur(12px);
+    font: 500 var(--t-nota)/1 var(--f-mono);
+    color: var(--acento-claro);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  }
+
+  .indicador-punto {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--acento);
+    box-shadow: 0 0 8px var(--acento);
+  }
+
+  /* Cargador inicial */
+  .cargador-pantalla {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: var(--tinta);
+    display: grid;
+    place-content: center;
+    gap: 1rem;
+    text-align: center;
+    transition: opacity 0.6s var(--curva-salida), visibility 0.6s;
+  }
+
+  .cargador-pantalla.oculto {
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  .cargador-barra {
+    width: 220px;
+    height: 4px;
+    border-radius: var(--r-pastilla);
+    background: var(--superficie);
+    overflow: hidden;
+    margin-inline: auto;
+  }
+
+  .cargador-progreso {
+    height: 100%;
+    width: 0%;
+    background: var(--acento);
+    transition: width 0.1s linear;
+  }
+
+  /* --- Mosaico de Datos Curiosos --- */
+  .mosaico-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2.5rem;
+  }
+
+  .tarjeta-dato {
+    padding: 2rem;
+    border-radius: var(--r-grande);
+    background: var(--tinta-2);
+    border: 1px solid var(--linea);
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    transition: transform var(--d-corta) var(--curva-salida), border-color var(--d-corta);
+  }
+
+  .tarjeta-dato:hover {
+    transform: translateY(-4px);
+    border-color: var(--acento-hondo);
+  }
+
+  .tarjeta-dato .numero-gigante {
+    font-family: var(--f-titulo);
+    font-size: var(--t-grande);
+    font-weight: 800;
+    color: var(--acento);
+    line-height: 1;
+  }
+
+  /* Responsive 375px mobile ajustado */
+  @media (max-width: 600px) {
+    .tarjeta-capitulo {
+      max-width: 100%;
+      padding: 1.2rem 1.4rem;
+    }
+    .indicador-dia {
+      top: 0.8rem;
+      right: 0.8rem;
+      font-size: 0.75rem;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- Pantalla de Carga Inicial -->
+<div id="cargador" class="cargador-pantalla">
+  <p class="etiqueta">Generando Jungla procedimental</p>
+  <h2 class="titulo-m">Cargando la travesía...</h2>
+  <div class="cargador-barra">
+    <div id="progreso-barra" class="cargador-progreso"></div>
+  </div>
+</div>
+
+<!-- Indicador de Fase del Día / Scroll -->
+<div class="indicador-dia">
+  <span class="indicador-punto"></span>
+  <span id="texto-fase">Amanecer • Liana 1</span>
+</div>
+
+<main>
+  <!-- ESCENARIO FIJO: LA TRAVESÍA DEL MONO -->
+  <section data-escenario style="--largo: 450vh" id="escenario-jungla">
+    <div data-escena class="escena-jungla">
+      <!-- Background Shader -->
+      <canvas id="fondo-shader" class="canvas-fondo"></canvas>
+
+      <!-- Canvas Película por Cuadros del Mono -->
+      <canvas id="canvas-mono" class="canvas-mono"></canvas>
+
+      <!-- Ancla de estado del mono -->
+      <div id="llamada-mono" class="llamada-ancla">
+        <div class="llamada-linea"></div>
+        <div id="llamada-texto" class="llamada-caja">Velocidad 18 km/h • Salto libre</div>
+      </div>
+
+      <!-- Capítulos / Textos sincronizados con el Scroll -->
+      <div class="capitulos-capa">
+        <!-- Hero / Capítulo 0: Amanecer -->
+        <article class="tarjeta-capitulo es-activa" data-capitulo="0" data-pos="centro">
+          <p class="etiqueta">Amanecer en el Dosel</p>
+          <h1 class="titulo-xl">El Guardián de la Jungla</h1>
+          <p class="bajada">Deslizá hacia abajo para acompañar al mono en su travesía por las copas de los árboles a través del día.</p>
+        </article>
+
+        <!-- Capítulo 1: Mediodía / Liana 2 -->
+        <article class="tarjeta-capitulo" data-capitulo="1" data-pos="izquierda">
+          <p class="etiqueta">02 / Biomecánica</p>
+          <h2 class="titulo-cap">Impulso en las Alturas</h2>
+          <p class="bajada">Mediante la braquiación, los primates convierten la energía potencial de la caída en impulso horizontal instantáneo, cruzando distancias de hasta 12 metros entre lianas.</p>
+        </article>
+
+        <!-- Capítulo 2: Atardecer / Liana 3 -->
+        <article class="tarjeta-capitulo" data-capitulo="2" data-pos="derecha">
+          <p class="etiqueta">03 / Biodiversidad</p>
+          <h2 class="titulo-cap">Navegantes Silenciosos</h2>
+          <p class="bajada">El estrato superior de la selva alberga más del 85% de la fauna tropical. Las lianas funcionan como autopistas naturales sin tocar jamás el suelo pelígrosos.</p>
+        </article>
+
+        <!-- Capítulo 3: Noche / Liana 4 -->
+        <article class="tarjeta-capitulo" data-capitulo="3" data-pos="centro">
+          <p class="etiqueta">04 / Penumbra Nocturna</p>
+          <h2 class="titulo-cap">Luces en la Oscuridad</h2>
+          <p class="bajada">Al caer la noche, miles de luciérnagas iluminan el follaje. El mono alcanza la última liana refugiándose en el dosel seguro para el descanso.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- BANDA QUIETA 1: BIOMECÁNICA DEL BALANCEO -->
+  <section class="banda grano resplandor">
+    <div class="contenedor grid-2" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:3rem; align-items:center;">
+      <div>
+        <p class="etiqueta" data-aparecer>Física de la Selva</p>
+        <h2 class="titulo-l" data-aparecer>La Ciencia Detrás del Péndulo Perfecto</h2>
+        <p class="bajada" data-aparecer style="margin-top:1rem;">
+          Cada balanceo es una lección de conservación de la energía. Al soltarse en el punto cénit, el primate aprovecha la gravedad para ganar aceleración sin fatiga muscular innecesaria.
+        </p>
+      </div>
+      <div class="tarjeta" style="padding:2.5rem;" data-aparecer>
+        <h3 class="titulo-m" style="color:var(--acento);">Eficiencia Energética del 90%</h3>
+        <p class="nota" style="margin-top:0.8rem; line-height:1.6;">
+          Los tendones de las extremidades superiores funcionan como resortes biológicos, almacenando energía elástica en la fase descendente y liberándola en la ascensión hacia la siguiente liana.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- BANDA QUIETA 2: MOSAICO DE DATOS CURIOSOS -->
+  <section class="banda">
+    <div class="contenedor">
+      <div style="text-align:center; max-width:36rem; margin-inline:auto;">
+        <p class="etiqueta" data-aparecer>El Dosel Tropical</p>
+        <h2 class="titulo-l" data-aparecer>Secretos de las Alturas</h2>
+      </div>
+
+      <div class="mosaico-grid">
+        <article class="tarjeta-dato" data-aparecer>
+          <span class="numero-gigante">45m</span>
+          <h3 class="titulo-m">Altura del Dosel</h3>
+          <p class="nota">La capa de hojas superior absorbe el 95% de la luz solar, creando un microclima único.</p>
+        </article>
+
+        <article class="tarjeta-dato" data-aparecer>
+          <span class="numero-gigante">300+</span>
+          <h3 class="titulo-dato">Lianas por Hectárea</h3>
+          <p class="nota">Plantas leñosas trepadoras que conectan árboles independientes en un único entramado.</p>
+        </article>
+
+        <article class="tarjeta-dato" data-aparecer>
+          <span class="numero-gigante">85%</span>
+          <h3 class="titulo-dato">Fauna del Dosel</h3>
+          <p class="nota">La gran mayoría de las especies de la selva viven y mueren sin pisar la tierra firme.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- BANDA QUIETA 3: CIERRE CON CTA FICTICIO -->
+  <section class="banda grano resplandor" style="text-align:center;">
+    <div class="contenedor" style="max-width:40rem; display:grid; gap:1.5rem; justify-items:center;">
+      <p class="etiqueta" data-aparecer>Expedición Interactiva</p>
+      <h2 class="titulo-l" data-aparecer>¿Listo para explorar la selva profunda?</h2>
+      <p class="bajada" data-aparecer>
+        Esta página es una demostración técnica desarrollada con el Motor webi, combinando física procedimental, shaders dinámicos y scroll sync.
+      </p>
+      <div data-aparecer style="margin-top:1rem;">
+        <button class="boton-vidrio" id="btn-cta">
+          <span>Unirse a la Expedición</span>
+        </button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="banda" style="border-top:1px solid var(--linea); padding-block:2rem;">
+  <div class="contenedor" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+    <p class="nota">Mono en la Jungla • Prueba del Motor webi</p>
+    <p class="etiqueta">Desarrollado con kit/ &amp; vanilla JS</p>
+  </div>
+</footer>
+
+<!-- Código de la Experiencia Interactiva -->
+<script type="module">
+  import { aparecer, capitulos, escenario } from "./kit/motor-scroll.js";
+  import { crearCuadros, conScroll } from "./kit/cuadros.js";
+  import { prepararCuadrosMono } from "./js/escena-mono.js";
+  import { iniciarAtmosfera } from "./js/atmosfera.js";
+  import { botonVidrio } from "./kit/componentes/boton-vidrio/boton-vidrio.js";
+
+  // Iniciar animaciones de entrada
+  aparecer();
+
+  // Iniciar botón de vidrio
+  const elBtn = document.getElementById("btn-cta");
+  if (elBtn) botonVidrio(elBtn);
+
+  // Elementos DOM
+  const elCargador = document.getElementById("cargador");
+  const elProgreso = document.getElementById("progreso-barra");
+  const elFaseTexto = document.getElementById("texto-fase");
+  const elLlamada = document.getElementById("llamada-mono");
+  const elLlamadaTexto = document.getElementById("llamada-texto");
+
+  const canvasFondo = document.getElementById("fondo-shader");
+  const canvasMono = document.getElementById("canvas-mono");
+  const elEscenario = document.getElementById("escenario-jungla");
+
+  const tarjetasCapitulos = [...document.querySelectorAll(".tarjeta-capitulo")];
+
+  // 1. Iniciar atmósfera con shader
+  const atmosfera = iniciarAtmosfera(canvasFondo);
+
+  // 2. Preparar y cargar cuadros del mono procedimental
+  const configMono = await prepararCuadrosMono((progreso) => {
+    if (elProgreso) elProgreso.style.width = `${Math.round(progreso * 100)}%`;
+  });
+
+  // Ocultar cargador al finalizar
+  setTimeout(() => {
+    if (elCargador) elCargador.classList.add("oculto");
+  }, 300);
+
+  // 3. Crear película por cuadros y conectar al scroll
+  const pelicula = crearCuadros(canvasMono, {
+    fuente: configMono.fuente,
+    total: configMono.total,
+    encaje: "cubrir",
+    foco: [0.5, 0.5]
+  });
+
+  conScroll(pelicula, elEscenario, { suavizar: 0.1 });
+
+  // Nombres de fases del día y lianas
+  const FASES = [
+    "Amanecer • Liana 1/4",
+    "Mediodía • Liana 2/4",
+    "Atardecer • Liana 3/4",
+    "Noche • Liana 4/4"
+  ];
+
+  const TEXTOS_LLAMADA = [
+    "Impulso inicial • 14 km/h",
+    "Braquiación • Liana 2",
+    "Vuelo libre • 22 km/h",
+    "Refugio nocturno • Dosel"
+  ];
+
+  // 4. Escenario Callback para actualizar Capítulos, Shader y Ancla
+  escenario(elEscenario, (p) => {
+    // A. Actualizar Shader de Fondo y Luciérnagas
+    atmosfera.actualizar(p);
+
+    // B. Dividir el progreso en 4 capítulos
+    const capInfo = capitulos(p, [0, 0.28, 0.58, 0.85, 1.0]);
+    const idxActivo = capInfo.indice;
+
+    // C. Mostrar/Ocultar tarjeta de capítulo correspondiente
+    tarjetasCapitulos.forEach((el, i) => {
+      if (i === idxActivo) {
+        el.classList.add("es-activa");
+      } else {
+        el.classList.remove("es-activa");
+      }
+    });
+
+    // D. Actualizar Indicador de Fase
+    if (elFaseTexto) elFaseTexto.textContent = FASES[idxActivo] || FASES[0];
+
+    // E. Actualizar posición del Pin Anclado en el mono
+    // Las coordenadas fuente (0..1) corresponden a la posición del mono
+    const posXFuente = 0.15 + p * 0.7;
+    const posYFuente = 0.45 + Math.sin(p * Math.PI * 6) * 0.1;
+    const pt = pelicula.punto(posXFuente, posYFuente);
+
+    if (elLlamada && pt) {
+      elLlamada.style.left = `${pt.x}px`;
+      elLlamada.style.top = `${pt.y}px`;
+      elLlamada.classList.add("es-activa");
+      if (elLlamadaTexto) elLlamadaTexto.textContent = TEXTOS_LLAMADA[idxActivo];
+    }
+  });
+</script>
+</body>
+</html>
