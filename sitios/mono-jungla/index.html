@@ -198,6 +198,26 @@
     will-change: transform;
   }
 
+  .mono-wrapper-trepa {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    will-change: transform;
+    animation: monoTrepaAnim 1.2s infinite ease-in-out alternate;
+  }
+
+  @keyframes monoTrepaAnim {
+    0% {
+      transform: translate3d(0, -6px, 0) rotate(-1.5deg);
+    }
+    100% {
+      transform: translate3d(0, 6px, 0) rotate(1.5deg);
+    }
+  }
+
   .mono-contenedor-cuerpo {
     position: relative;
     width: auto;
@@ -205,7 +225,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transform-origin: 50% 20%;
+    transform-origin: 50% 35%;
   }
 
   .mono-img {
@@ -220,23 +240,29 @@
     filter: drop-shadow(0 15px 35px rgba(0, 0, 0, 0.5));
   }
 
-  /* Placeholder Golpe de Pecho (animación CSS al aterrizar en el pasto) */
+  /* Placeholder Golpe de Pecho (animación de doble impacto "pum-pum ... pausa") */
   .mono-contenedor-cuerpo.golpe-pecho {
-    animation: golpePechoRitmo 0.7s infinite ease-in-out alternate;
+    animation: golpePechoRitmo 1.2s infinite ease-out;
   }
 
   @keyframes golpePechoRitmo {
     0% {
-      transform: scale(1) translateY(0) rotate(0deg);
+      transform: scale(1) translateY(0);
     }
-    30% {
-      transform: scale(1.04, 0.96) translateY(2px) rotate(-1.5deg);
+    12% {
+      transform: scale(1.06, 0.96) translateY(-10px);
     }
-    60% {
-      transform: scale(0.97, 1.03) translateY(-4px) rotate(1.5deg);
+    22% {
+      transform: scale(0.97, 1.02) translateY(2px);
     }
-    100% {
-      transform: scale(1.02, 0.98) translateY(1px) rotate(0deg);
+    34% {
+      transform: scale(1.07, 0.95) translateY(-12px);
+    }
+    46% {
+      transform: scale(0.98, 1.01) translateY(1px);
+    }
+    60%, 100% {
+      transform: scale(1) translateY(0);
     }
   }
 
@@ -514,6 +540,9 @@
     .bicho {
       animation: none !important;
     }
+    .mono-wrapper-trepa {
+      animation: none !important;
+    }
     .mono-contenedor-cuerpo.golpe-pecho {
       animation: none !important;
     }
@@ -566,8 +595,10 @@
     <!-- MONO PROTAGONISTA EN WRAPPERS INDEPENDIENTES -->
     <div id="mono-scroll" class="mono-wrapper-scroll">
       <div id="mono-puntero" class="mono-wrapper-puntero">
-        <div id="mono-cuerpo" class="mono-contenedor-cuerpo">
-          <img src="medios/mono-recorte.webp" alt="Mono araña descendiendo por la liana" class="mono-img">
+        <div id="mono-trepa" class="mono-wrapper-trepa">
+          <div id="mono-cuerpo" class="mono-contenedor-cuerpo">
+            <img src="medios/mono-recorte.webp" alt="Mono araña descendiendo por la liana" class="mono-img">
+          </div>
         </div>
       </div>
     </div>
@@ -710,10 +741,10 @@
     }
 
     // A) MOVIMIENTO DEL MONO SEGÚN SCROLL
-    // Vertical: translateY de 0% a +10% de la pantalla, scale de 1.06 a 0.92 (baja hacia el pasto)
-    const monoTranslateY = (progresoSuave * 10).toFixed(2);
-    const monoScale = (1.06 - progresoSuave * 0.14).toFixed(3);
-    elMonoScroll.style.transform = `translate3d(0, ${monoTranslateY}%, 0) scale(${monoScale})`;
+    // Vertical: translateY de -18vh a +26vh, scale de 1.06 a 0.90 (recorre de arriba a abajo por la liana)
+    const monoTranslateY = (-18 + progresoSuave * 44).toFixed(2);
+    const monoScale = (1.06 - progresoSuave * 0.16).toFixed(3);
+    elMonoScroll.style.transform = `translate3d(0, ${monoTranslateY}vh, 0) scale(${monoScale})`;
 
     // B) SEGUIMIENTO DEL PUNTERO Y VAIVÉN EN REPOSO DEL MONO
     let targetX = punt.x;
@@ -733,8 +764,8 @@
     const monoRotate = ((actualPunteroX - 0.5) * 6).toFixed(2);
     elMonoPuntero.style.transform = `translate3d(${monoOffsetX}%, 0, 0) rotate(${monoRotate}deg)`;
 
-    // C) ATERRIZAJE Y GOLPE DE PECHO EN EL PASTO (último ~8% del scroll: progreso >= 0.92)
-    if (progresoSuave >= 0.92) {
+    // C) ATERRIZAJE Y GOLPE DE PECHO EN EL PASTO (último ~10% del scroll: progreso >= 0.90)
+    if (progresoSuave >= 0.90) {
       elMonoCuerpo.classList.add("golpe-pecho");
     } else {
       elMonoCuerpo.classList.remove("golpe-pecho");
