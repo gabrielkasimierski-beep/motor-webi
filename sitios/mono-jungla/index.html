@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>MONO — Dosel Amazónico</title>
+<title>MONO — El Descenso Interactivo</title>
 
 <!-- Tipografías de Google Fonts -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -11,69 +11,176 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
 <!-- Hojas de estilo del kit -->
-<link rel="stylesheet" href="./kit/tokens.css">
-<link rel="stylesheet" href="./kit/secciones.css">
+<link rel="stylesheet" href="../../kit/tokens.css">
+<link rel="stylesheet" href="../../kit/secciones.css">
 
 <style>
-  /* --- PORTADA Y CAPAS --- */
-  .portada {
-    position: relative;
-    width: 100%;
-    height: 100vh;
-    height: 100svh;
-    min-height: 600px;
-    margin-top: 0 !important; /* Anular margen negativo de secciones.css para que el nav no se corte arriba */
-    overflow: hidden;
-    background: #0B140C;
-    isolation: isolate;
+  :root {
+    --tinta: #0B140C;
+    --tinta-2: #122014;
+    --hueso: #F4EFE1;
+    --dorado: #E0B04A;
+    --dorado-claro: #F2C972;
+    --f-titulo: "Archivo Black", system-ui, sans-serif;
+    --f-serif: "Instrument Serif", Georgia, serif;
+    --f-texto: "Instrument Sans", system-ui, sans-serif;
+    --f-mono: "JetBrains Mono", monospace;
   }
 
-  /* Video, imagen final y recorte comparten exactamente la misma caja y encuadre */
-  .portada__medio {
+  body {
+    background-color: var(--tinta);
+    color: var(--hueso);
+    font-family: var(--f-texto);
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+  }
+
+  /* --- ESCENARIO DE SCROLL --- */
+  .escenario-viaje {
+    position: relative;
+    width: 100%;
+  }
+
+  [data-escena] {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    height: 100svh;
+    width: 100%;
+    overflow: hidden;
+    isolation: isolate;
+    background: var(--tinta);
+  }
+
+  /* --- FONDO PELÍCULA (CANVAS) --- */
+  .fondo-canvas {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
-    object-position: 50% 40%;
-  }
-
-  .portada video.portada__medio {
-    z-index: 0;
-    background: #0B140C;
-  }
-
-  .portada__final {
     z-index: 1;
-    opacity: 0;
-    pointer-events: none;
   }
 
-  .portada__recorte {
-    z-index: 4;
-    opacity: 0;
-    pointer-events: none;
-  }
-
-  /* Velo: degradado superior nav + radial oscuro inferior izquierdo + fundido inferior a #0B140C */
-  .portada__velo {
+  .fondo-fallback {
     position: absolute;
     inset: 0;
-    z-index: 2;
-    pointer-events: none;
-    background:
-      linear-gradient(to bottom, rgba(11, 20, 12, 0.45) 0px, transparent 140px),
-      radial-gradient(ellipse 85% 85% at 15% 85%, rgba(11, 20, 12, 0.94) 0%, rgba(11, 20, 12, 0.6) 50%, transparent 80%),
-      linear-gradient(to bottom, transparent 70%, #0B140C 100%);
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
+    opacity: 1;
+    transition: opacity 0.6s ease;
   }
 
-  /* Título Gigante "MONO" detrás del animal.
-     El contenedor (.portada__titulo-caja) maneja el parallax con el puntero via translate.
-     El h1 (.portada__titulo-gigante) maneja la animación de entrada (opacity + translateY) */
-  .portada__titulo-caja {
+  /* --- CARGADOR PROGRESIVO --- */
+  .cargador {
+    position: absolute;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 1rem;
+    border-radius: var(--r-pastilla);
+    background: rgba(11, 20, 12, 0.75);
+    border: 1px solid rgba(244, 239, 225, 0.15);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    font-family: var(--f-mono);
+    font-size: 0.75rem;
+    color: var(--hueso);
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+  }
+
+  .cargador.oculto {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .cargador__barra {
+    width: 40px;
+    height: 3px;
+    background: rgba(244, 239, 225, 0.2);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .cargador__progreso {
+    width: 0%;
+    height: 100%;
+    background: var(--dorado);
+    transition: width 0.15s linear;
+  }
+
+  /* --- CAPA VIDA (MARIPOSA Y GUACAMAYO) --- */
+  .capa-vida {
     position: absolute;
     inset: 0;
     z-index: 3;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+
+  .bicho {
+    position: absolute;
+    will-change: transform;
+    filter: drop-shadow(0 10px 20px rgba(0,0,0,0.4));
+  }
+
+  .guacamayo {
+    top: 25%;
+    left: -20%;
+    width: clamp(220px, 28vw, 420px);
+    height: auto;
+    animation: cruceGuacamayo 14s infinite linear;
+  }
+
+  .mariposa-1 {
+    top: 45%;
+    right: -10%;
+    width: clamp(60px, 8vw, 120px);
+    height: auto;
+    animation: cruceMariposa1 10s infinite ease-in-out;
+  }
+
+  .mariposa-2 {
+    top: 60%;
+    left: -10%;
+    width: clamp(45px, 6vw, 90px);
+    height: auto;
+    animation: cruceMariposa2 12s infinite ease-in-out;
+  }
+
+  @keyframes cruceGuacamayo {
+    0% { transform: translate3d(0, 0, 0) rotate(-2deg); }
+    50% { transform: translate3d(140vw, 8vh, 0) rotate(3deg); }
+    100% { transform: translate3d(280vw, -2vh, 0) rotate(-2deg); }
+  }
+
+  @keyframes cruceMariposa1 {
+    0% { transform: translate3d(0, 0, 0) scale(1); }
+    30% { transform: translate3d(-50vw, -12vh, 0) scale(1.1) rotate(-10deg); }
+    70% { transform: translate3d(-100vw, 6vh, 0) scale(0.9) rotate(8deg); }
+    100% { transform: translate3d(-160vw, -5vh, 0) scale(1); }
+  }
+
+  @keyframes cruceMariposa2 {
+    0% { transform: translate3d(0, 0, 0) scale(0.9); }
+    40% { transform: translate3d(60vw, 10vh, 0) scale(1.15) rotate(12deg); }
+    80% { transform: translate3d(110vw, -8vh, 0) scale(0.95) rotate(-6deg); }
+    100% { transform: translate3d(160vw, 4vh, 0) scale(0.9); }
+  }
+
+  /* --- MONO PROTAGONISTA EN CAPAS --- */
+  .mono-wrapper-scroll {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -81,72 +188,101 @@
     will-change: transform;
   }
 
-  .portada__titulo-gigante {
-    font-family: var(--f-gigante);
-    font-size: clamp(88px, 22vw, 380px);
-    line-height: 0.82;
-    letter-spacing: -0.04em;
-    color: #F4EFE1;
-    margin: 0;
-    text-transform: uppercase;
-    text-align: center;
-    white-space: nowrap;
-    width: max-content;
-    /* Arranca invisible con animación independiente */
-    opacity: 0;
-    transform: translateY(40px);
-    transition: opacity 900ms cubic-bezier(0.16, 1, 0.3, 1), transform 900ms cubic-bezier(0.16, 1, 0.3, 1);
+  .mono-wrapper-puntero {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    will-change: transform;
   }
 
-  /* Estado cuando termina el video y congela */
-  .portada.es-congelado .portada__titulo-gigante {
-    opacity: 0.92;
-    transform: translateY(0);
+  .mono-contenedor-cuerpo {
+    position: relative;
+    width: auto;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform-origin: 50% 20%;
   }
 
-  /* Capa de Interfaz encima */
-  .portada__interfaz {
+  .mono-img {
+    height: 100%;
+    width: auto;
+    max-height: 100vh;
+    max-height: 100svh;
+    object-fit: contain;
+    pointer-events: auto;
+    user-select: none;
+    -webkit-user-drag: none;
+    filter: drop-shadow(0 15px 35px rgba(0, 0, 0, 0.5));
+  }
+
+  /* Placeholder Golpe de Pecho (animación CSS al aterrizar en el pasto) */
+  .mono-contenedor-cuerpo.golpe-pecho {
+    animation: golpePechoRitmo 0.7s infinite ease-in-out alternate;
+  }
+
+  @keyframes golpePechoRitmo {
+    0% {
+      transform: scale(1) translateY(0) rotate(0deg);
+    }
+    30% {
+      transform: scale(1.04, 0.96) translateY(2px) rotate(-1.5deg);
+    }
+    60% {
+      transform: scale(0.97, 1.03) translateY(-4px) rotate(1.5deg);
+    }
+    100% {
+      transform: scale(1.02, 0.98) translateY(1px) rotate(0deg);
+    }
+  }
+
+  /* --- CAPA PRIMER PLANO (ATMÓSFERA: VIGNETTE, RAYOS, GRANO) --- */
+  .capa-atmosfera {
     position: absolute;
     inset: 0;
     z-index: 5;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding: var(--margen);
     pointer-events: none;
+    background:
+      radial-gradient(circle at 50% 50%, transparent 45%, rgba(11, 20, 12, 0.65) 85%, rgba(11, 20, 12, 0.92) 100%),
+      linear-gradient(135deg, rgba(242, 201, 114, 0.08) 0%, transparent 40%, rgba(11, 20, 12, 0.3) 100%);
   }
 
-  .portada__interfaz * {
-    pointer-events: auto;
-  }
-
-  /* Nav superior */
-  .portada__nav {
+  /* --- NAV SUPERIOR --- */
+  .nav-transparente {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    width: 100%;
-    padding-top: 0.2rem;
+    padding: 1.2rem var(--margen);
+    pointer-events: auto;
   }
 
-  .portada__nav-marca {
+  .nav-marca {
     display: flex;
     align-items: center;
     gap: 0.6rem;
     font-family: var(--f-mono);
-    font-size: 1.15rem;
+    font-size: 1.1rem;
     font-weight: 600;
     letter-spacing: 0.25em;
-    color: #F4EFE1;
+    color: var(--hueso);
   }
 
-  .portada__nav-icono {
+  .nav-marca svg {
     width: 22px;
     height: 22px;
-    color: #E0B04A;
+    color: var(--dorado);
   }
 
-  .portada__nav-enlaces {
+  .nav-enlaces {
     display: flex;
     align-items: center;
     gap: 2rem;
@@ -155,118 +291,106 @@
     letter-spacing: 0.2em;
   }
 
-  .portada__nav-enlaces a,
-  .portada__nav-ingresar {
-    color: #F4EFE1;
-    opacity: 0.9;
-    font-weight: 500;
-    text-shadow: 0 1px 12px rgba(11, 20, 12, 0.55);
-    transition: opacity 0.2s, color 0.2s, text-decoration 0.2s;
-    text-decoration: none;
+  .nav-enlaces a {
+    color: var(--hueso);
+    opacity: 0.85;
+    transition: opacity 0.2s, color 0.2s;
   }
 
-  .portada__nav-enlaces a:hover,
-  .portada__nav-ingresar:hover {
+  .nav-enlaces a:hover {
     opacity: 1;
-    color: #F4EFE1;
-    text-decoration: underline;
-    text-decoration-color: #E0B04A;
-    text-underline-offset: 4px;
-    text-decoration-thickness: 1px;
+    color: var(--dorado);
   }
 
-  .portada__nav-acciones {
-    display: flex;
-    align-items: center;
-    gap: 1.2rem;
-  }
-
-  .portada__nav-ingresar {
-    font-family: var(--f-texto);
-    font-size: 0.88rem;
-  }
-
-  .portada__nav-boton-reservar {
+  .nav-boton-accion {
     display: inline-flex;
     align-items: center;
-    padding: 0.55rem 1.3rem;
+    padding: 0.5rem 1.2rem;
     border-radius: var(--r-pastilla);
     background: rgba(18, 32, 20, 0.85);
     border: 1px solid rgba(244, 239, 225, 0.2);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    color: #F4EFE1;
+    color: var(--hueso);
     font-family: var(--f-mono);
     font-size: 0.72rem;
     letter-spacing: 0.15em;
     transition: background 0.2s, border-color 0.2s, transform 0.2s;
   }
 
-  .portada__nav-boton-reservar:hover {
+  .nav-boton-accion:hover {
     background: rgba(26, 44, 28, 0.95);
-    border-color: rgba(224, 176, 74, 0.6);
+    border-color: var(--dorado);
     transform: translateY(-1px);
   }
 
-  /* Pie de Portada: Editorial izquierda y Paneles derecha */
-  .portada__cuerpo {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 2rem;
-    width: 100%;
-    margin-bottom: 0.2rem;
+  /* --- TEXTOS CINEMATOGRÁFICOS EN BANDAS DE SCROLL --- */
+  .capa-textos {
+    position: absolute;
+    inset: 0;
+    z-index: 6;
+    pointer-events: none;
   }
 
-  .portada__editorial {
-    max-width: 30rem;
+  .banda-texto {
+    position: absolute;
+    inset: 0;
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    text-align: left;
-    gap: 0.75rem;
-    color: #F4EFE1;
+    justify-content: flex-end;
+    padding: 3rem var(--margen) 4rem var(--margen);
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
   }
 
-  .portada__editorial-sub {
+  .banda-texto.activa {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .banda-texto--arriba {
+    justify-content: flex-start;
+    padding-top: 6.5rem;
+  }
+
+  .banda-texto--abajo {
+    justify-content: flex-end;
+  }
+
+  .banda-texto__contenido {
+    max-width: 32rem;
+    pointer-events: auto;
+  }
+
+  .banda-texto__etiqueta {
     font-family: var(--f-mono);
-    font-size: 0.7rem;
-    letter-spacing: 0.2em;
-    color: #F2C972;
-    margin: 0;
+    font-size: 0.72rem;
+    letter-spacing: 0.22em;
+    color: var(--dorado);
+    margin-bottom: 0.4rem;
     text-transform: uppercase;
-    text-align: left;
   }
 
-  .portada__editorial-titular {
+  .banda-texto__titulo {
     font-family: var(--f-serif);
-    font-size: clamp(2.4rem, 4.8vw, 3.8rem);
+    font-size: clamp(2.4rem, 5vw, 4.2rem);
     font-weight: 400;
-    line-height: 1.05;
-    color: #F4EFE1;
-    margin: 0;
-    text-align: left;
+    line-height: 1.02;
+    color: var(--hueso);
+    margin: 0 0 0.8rem 0;
   }
 
-  .portada__editorial-titular em {
+  .banda-texto__titulo em {
     font-style: italic;
-    color: #F2C972;
+    color: var(--dorado-claro);
   }
 
-  .portada__editorial-parrafo {
+  .banda-texto__bajada {
     font-size: 0.95rem;
     line-height: 1.5;
-    color: #C4BEAF;
-    margin: 0;
-    text-align: left;
-    max-width: 28rem;
-  }
-
-  .portada__editorial-acciones {
-    display: flex;
-    align-items: center;
-    gap: 1.2rem;
-    margin-top: 0.3rem;
+    color: rgba(244, 239, 225, 0.8);
+    margin: 0 0 1.2rem 0;
   }
 
   .boton-dorado {
@@ -275,205 +399,65 @@
     justify-content: center;
     padding: 0.75rem 1.6rem;
     border-radius: var(--r-pastilla);
-    background: #E0B04A;
-    color: #0B140C;
+    background: var(--dorado);
+    color: var(--tinta);
     font-weight: 600;
     font-size: 0.88rem;
-    transition: transform 0.2s var(--curva-salida), background 0.2s, box-shadow 0.2s;
+    transition: transform 0.2s, background 0.2s, box-shadow 0.2s;
+    text-decoration: none;
+    box-shadow: 0 4px 20px rgba(224, 176, 74, 0.25);
   }
 
   .boton-dorado:hover {
     transform: translateY(-2px);
-    background: #F2C972;
-    box-shadow: 0 8px 24px rgba(224, 176, 74, 0.3);
+    background: var(--dorado-claro);
+    box-shadow: 0 8px 25px rgba(224, 176, 74, 0.4);
   }
 
-  .link-texto {
-    font-size: 0.9rem;
-    color: #F4EFE1;
-    font-weight: 500;
-    transition: color 0.2s;
-  }
-
-  .link-texto:hover {
-    color: #F2C972;
-  }
-
-  /* Bloque derecho */
-  .portada__panel-derecho {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 1.1rem;
-  }
-
-  .portada__exploradores {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-  }
-
-  .portada__avatars {
-    display: flex;
-    align-items: center;
-  }
-
-  .portada__avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    border: 2px solid #0B140C;
-    background-image: url('medios/mono-final.jpg');
-    margin-left: -10px;
-  }
-
-  .portada__avatar:first-child { margin-left: 0; }
-  /* Recortes exactos para los avatares (~1400% auto) */
-  .avatar-1 { background-size: auto 600%; background-position: 50.5% 25.5%; } /* Cara centrada */
-  .avatar-2 { background-size: 1400% auto; background-position: 50% 45%; }   /* Pecho dorado */
-  .avatar-3 { background-size: 1400% auto; background-position: 50% 82%; }   /* Cola */
-
-  .portada__exploradores-texto {
-    font-size: 0.8rem;
-    color: #C4BEAF;
-    font-family: var(--f-texto);
-  }
-
-  .portada__tarjetas {
-    display: flex;
-    gap: 1rem;
-  }
-
-  .tarjeta-vidrio {
-    width: 170px;
-    padding: 0.85rem;
-    border-radius: 14px;
-    background: rgba(18, 32, 20, 0.65);
-    border: 1px solid rgba(244, 239, 225, 0.15);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    display: flex;
-    flex-direction: column;
-    gap: 0.6rem;
-  }
-
-  .tarjeta-vidrio__thumb {
+  /* INDICADOR DE PROGRESO DE SCROLL */
+  .progreso-scroll {
+    position: absolute;
+    bottom: 0;
+    left: 0;
     width: 100%;
-    height: 64px;
-    border-radius: 8px;
-    background-image: url('medios/mono-final.jpg');
+    height: 3px;
+    background: rgba(244, 239, 225, 0.1);
+    z-index: 10;
   }
 
-  /* Recortes de primeros planos en miniaturas de tarjetas */
-  .thumb-1 { background-size: auto 600%; background-position: 50.5% 25.5%; } /* Cara centrada (~60% alto) */
-  .thumb-2 { background-size: 900% auto; background-position: 50% 84%; }    /* Cola enroscada */
-
-  .tarjeta-vidrio__info {
-    display: flex;
-    flex-direction: column;
-    gap: 0.2rem;
+  .progreso-scroll__linea {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--dorado), var(--dorado-claro));
+    transition: width 0.05s linear;
   }
 
-  .tarjeta-vidrio__etiqueta {
+  /* INDICADOR INTERACTIVO "DESLIZÁ" */
+  .indicador-desliza {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
     font-family: var(--f-mono);
-    font-size: 0.625rem;
-    letter-spacing: 0.12em;
-    color: #C4BEAF;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    color: rgba(244, 239, 225, 0.7);
     text-transform: uppercase;
   }
 
-  .tarjeta-vidrio__numero {
-    font-family: var(--f-serif);
-    font-size: 1.8rem;
-    line-height: 1;
-    color: #F4EFE1;
-    font-weight: 600;
+  .indicador-desliza svg {
+    animation: flechaVaiven 1.5s infinite ease-in-out;
   }
 
-  /* Botón discreto Repetir */
-  .portada__boton-repetir {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-    padding: 0.4rem 0.85rem;
-    border-radius: var(--r-pastilla);
-    background: rgba(18, 32, 20, 0.7);
-    border: 1px solid rgba(244, 239, 225, 0.15);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    color: #C4BEAF;
-    font-family: var(--f-mono);
-    font-size: 0.7rem;
-    cursor: pointer;
-    transition: color 0.2s, border-color 0.2s, background 0.2s;
+  @keyframes flechaVaiven {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(4px); }
   }
 
-  .portada__boton-repetir:hover {
-    color: #F4EFE1;
-    border-color: rgba(224, 176, 74, 0.5);
-    background: rgba(26, 44, 28, 0.9);
-  }
-
-  /* --- SECCIONES INFERIORES --- */
-  .seccion-encabezado {
-    text-align: center;
-    max-width: 38rem;
-    margin-inline: auto;
-    margin-bottom: 3.5rem;
-  }
-
-  .titular-serif {
-    font-family: var(--f-serif);
-    font-size: clamp(2.2rem, 4.5vw, 3.5rem);
-    font-weight: 400;
-    line-height: 1.1;
-    color: #F4EFE1;
-    margin-top: 0.4rem;
-  }
-
-  .titular-serif-grande {
-    font-family: var(--f-serif);
-    font-size: clamp(2.6rem, 5.5vw, 4.2rem);
-    font-weight: 400;
-    line-height: 1.05;
-    color: #F4EFE1;
-    margin-top: 0.4rem;
-  }
-
-  .grid-tres-columnas {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 2rem;
-  }
-
-  .columna-dato {
-    display: flex;
-    flex-direction: column;
-    gap: 0.8rem;
-    padding: 2rem;
-    border-radius: var(--r-medio);
-    background: var(--tinta-2);
-    border: 1px solid var(--linea);
-    transition: transform var(--d-corta) var(--curva-salida), border-color var(--d-corta);
-  }
-
-  .columna-dato:hover {
-    transform: translateY(-4px);
-    border-color: rgba(224, 176, 74, 0.4);
-  }
-
-  .numero-serif {
-    font-family: var(--f-serif);
-    font-size: clamp(3rem, 6vw, 4.5rem);
-    line-height: 1;
-    color: #E0B04A;
-    font-weight: 400;
-  }
-
+  /* --- PIE MÍNIMO POSTERIOR --- */
   .pie-minimo {
-    padding-block: 2rem;
-    border-top: 1px solid var(--linea);
-    background: #0B140C;
+    padding-block: 2.5rem;
+    border-top: 1px solid rgba(244, 239, 225, 0.1);
+    background: var(--tinta);
   }
 
   .pie-minimo__cuerpo {
@@ -484,355 +468,325 @@
     gap: 1rem;
   }
 
-  /* Responsive Móvil (hasta 700px) */
+  /* --- RESPONSIVE MOBILE (< 700px) --- */
   @media (max-width: 700px) {
-    .portada {
-      height: auto;
-      min-height: 100vh;
-      min-height: 100svh;
-      display: flex;
-      flex-direction: column;
-      overflow: visible;
-      background: #0B140C;
-      position: relative;
-    }
-
-    /* Caja de medios (video, final, recorte) en los primeros 62svh */
-    .portada__medio {
-      height: 62svh;
-      width: 100%;
-      object-fit: cover;
-      object-position: 50% 30%;
-    }
-
-    /* Velo de 62svh con degradado inferior (últimos 25%) hacia #0B140C */
-    .portada__velo {
-      height: 62svh;
-      bottom: auto;
-      background:
-        linear-gradient(to bottom, rgba(11, 20, 12, 0.5) 0px, transparent 100px),
-        linear-gradient(to bottom, transparent 75%, #0B140C 100%);
-    }
-
-    /* Título "MONO" centrado en la caja de 62svh a la altura del pecho */
-    .portada__titulo-caja {
-      height: 62svh;
-      bottom: auto;
-      align-items: center;
-      justify-content: center;
-      padding-top: 0;
-    }
-
-    .portada__titulo-gigante {
-      font-size: clamp(60px, 22vw, 130px);
-    }
-
-    /* Interfaz en flujo vertical debajo de la caja de medios */
-    .portada__interfaz {
-      position: relative;
-      inset: auto;
-      height: auto;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .portada__nav {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 10;
-      padding: 1rem 20px;
-      box-sizing: border-box;
-    }
-
-    .portada__nav-enlaces,
-    .portada__nav-ingresar {
+    .nav-enlaces {
       display: none;
     }
 
-    .portada__cuerpo {
-      margin-top: 62svh;
-      padding: 1.5rem 20px 2.5rem 20px;
-      box-sizing: border-box;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 1.5rem;
-      background: #0B140C;
-      width: 100%;
+    .banda-texto {
+      padding: 2rem 1.2rem 3rem 1.2rem;
     }
 
-    .portada__editorial {
-      align-items: flex-start;
-      text-align: left;
-      width: 100%;
-      max-width: 100%;
-      gap: 0.8rem;
+    .banda-texto--arriba {
+      padding-top: 5rem;
     }
 
-    .portada__editorial-titular {
+    .banda-texto__titulo {
       font-size: 2.2rem;
     }
 
-    .portada__panel-derecho {
-      align-items: flex-start;
-      width: 100%;
-      gap: 1.2rem;
+    .cargador {
+      bottom: 1rem;
+      right: 1rem;
     }
+  }
 
-    .portada__boton-repetir {
-      order: 1;
+  /* --- PREFERS REDUCED MOTION --- */
+  @media (prefers-reduced-motion: reduce) {
+    [data-escenario] {
+      height: auto !important;
     }
-
-    .portada__exploradores {
-      order: 2;
+    [data-escena] {
+      position: relative !important;
+      height: auto !important;
+      min-height: 100vh;
     }
-
-    .portada__tarjetas {
-      order: 3;
-      display: flex;
-      flex-direction: row;
-      gap: 0.8rem;
-      width: 100%;
+    .cargador, .progreso-scroll {
+      display: none !important;
     }
-
-    .tarjeta-vidrio {
-      flex: 1;
-      width: auto;
+    .banda-texto {
+      position: relative !important;
+      opacity: 1 !important;
+      transform: none !important;
+      padding: 3rem 1.5rem !important;
+    }
+    .bicho {
+      animation: none !important;
+    }
+    .mono-contenedor-cuerpo.golpe-pecho {
+      animation: none !important;
     }
   }
 </style>
 </head>
 <body>
 
-<!-- 1. PORTADA A PANTALLA COMPLETA -->
-<header class="portada grano" id="portada">
-  <!-- Capa 1: Video -->
-  <video class="portada__medio" muted playsinline preload="auto" poster="medios/mono-poster.jpg" src="medios/mono-web.mp4"></video>
+<!-- ESCENARIO PRINCIPAL CONTROLADO POR SCROLL (520vh) -->
+<section class="escenario-viaje" data-escenario style="--largo: 520vh">
+  <div data-escena class="grano">
 
-  <!-- Capa 2: Imagen final del último cuadro -->
-  <img class="portada__medio portada__final" src="medios/mono-final.jpg" alt="" aria-hidden="true">
-
-  <!-- Capa 3: Velo radial e inferior -->
-  <div class="portada__velo" aria-hidden="true"></div>
-
-  <!-- Capa 4: Título Gigante "MONO" -->
-  <div class="portada__titulo-caja" id="titulo-caja">
-    <h1 class="portada__titulo-gigante">MONO</h1>
-  </div>
-
-  <!-- Capa 5: Recorte con alfa del mono y liana -->
-  <img class="portada__medio portada__recorte" src="medios/mono-recorte.webp" alt="" aria-hidden="true">
-
-  <!-- Capa 6: Interfaz overlay -->
-  <div class="portada__interfaz">
-    <!-- Nav superior -->
-    <nav class="portada__nav">
-      <div class="portada__nav-marca">
-        <svg class="portada__nav-icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <!-- NAV SUPERIOR TRANSPARENTE -->
+    <header class="nav-transparente">
+      <div class="nav-marca">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
         </svg>
         <span>MONO</span>
       </div>
 
-      <div class="portada__nav-enlaces">
-        <a href="#especies">SELVA</a>
-        <a href="#especies">ESPECIES</a>
-        <a href="#expediciones">EXPEDICIONES</a>
-        <a href="#expediciones">DIARIO</a>
-      </div>
+      <nav class="nav-enlaces">
+        <a href="#experiencia">EL DESCENSO</a>
+        <a href="#experiencia">DOSEL</a>
+        <a href="#experiencia">FAUNA</a>
+      </nav>
 
-      <div class="portada__nav-acciones">
-        <a class="portada__nav-ingresar" href="#">Ingresar</a>
-        <a class="portada__nav-boton-reservar" href="#expediciones">RESERVAR</a>
-      </div>
-    </nav>
+      <a class="nav-boton-accion" href="#pie">EXPLORAR</a>
+    </header>
 
-    <!-- Pie de portada -->
-    <div class="portada__cuerpo">
-      <!-- Bloque Editorial Izquierdo -->
-      <div class="portada__editorial">
-        <p class="portada__editorial-sub">DOSEL AMAZÓNICO · 40 M DE ALTURA</p>
-        <h2 class="portada__editorial-titular">Vivir en<br><em>las alturas</em></h2>
-        <p class="portada__editorial-parrafo">El mono araña domina el nivel superior del bosque tropical, utilizando la braquiación para cruzar el dosel sin tocar la tierra.</p>
-        <div class="portada__editorial-acciones">
-          <a class="boton-dorado" href="#expediciones">Empezar el viaje</a>
-          <a class="link-texto" href="#especies">Ver la travesía →</a>
+    <!-- FONDO: PELÍCULA DE CUADROS (CANVAS) -->
+    <canvas id="canvas-fondo" class="fondo-canvas"></canvas>
+    <img id="fondo-fallback" class="fondo-fallback" src="medios/mono-poster.jpg" alt="" aria-hidden="true" style="display: none;">
+
+    <!-- CARGADOR DE PROGRESO DE IMÁGENES -->
+    <div id="cargador" class="cargador" aria-live="polite">
+      <span>Cargando película</span>
+      <div class="cargador__barra">
+        <div id="cargador-progreso" class="cargador__progreso"></div>
+      </div>
+    </div>
+
+    <!-- CAPA VIDA: MARIPOSA Y GUACAMAYO (DETRÁS DEL MONO) -->
+    <div id="capa-vida" class="capa-vida">
+      <img src="medios/guacamayo.webp" alt="" class="bicho guacamayo" id="bicho-guacamayo">
+      <img src="medios/mariposa.webp" alt="" class="bicho mariposa-1" id="bicho-mariposa-1">
+      <img src="medios/mariposa.webp" alt="" class="bicho mariposa-2" id="bicho-mariposa-2">
+    </div>
+
+    <!-- MONO PROTAGONISTA EN WRAPPERS INDEPENDIENTES -->
+    <div id="mono-scroll" class="mono-wrapper-scroll">
+      <div id="mono-puntero" class="mono-wrapper-puntero">
+        <div id="mono-cuerpo" class="mono-contenedor-cuerpo">
+          <img src="medios/mono-recorte.webp" alt="Mono araña descendiendo por la liana" class="mono-img">
         </div>
       </div>
+    </div>
 
-      <!-- Bloque Derecho: Avatares, Tarjetas de Vidrio y Repetir -->
-      <div class="portada__panel-derecho">
-        <button class="portada__boton-repetir" id="btn-repetir" type="button" aria-label="Volver a reproducir video">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/>
-          </svg>
-          <span>Repetir</span>
-        </button>
+    <!-- CAPA PRIMER PLANO (ATMÓSFERA: VIGNETTE Y RAYOS DE LUZ) -->
+    <div class="capa-atmosfera"></div>
 
-        <div class="portada__exploradores">
-          <div class="portada__avatars">
-            <span class="portada__avatar avatar-1"></span>
-            <span class="portada__avatar avatar-2"></span>
-            <span class="portada__avatar avatar-3"></span>
+    <!-- TEXTOS CINEMATOGRÁFICOS EN 3 BANDAS SEGÚN EL SCROLL -->
+    <div class="capa-textos">
+      <!-- Banda 1: Copa (0.00 - 0.18) -->
+      <div id="banda-1" class="banda-texto banda-texto--abajo activa">
+        <div class="banda-texto__contenido">
+          <div class="banda-texto__etiqueta">Copa del Árbol · 40 m de Altura</div>
+          <h1 class="banda-texto__titulo">EL <em>DESCENSO</em></h1>
+          <p class="banda-texto__bajada">Acompañá al mono araña en su travesía vertical desde la cima soleada hasta el piso húmedo de la selva.</p>
+          <div class="indicador-desliza">
+            <span>Deslizá para bajar</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 5v14M19 12l-7 7-7-7"/>
+            </svg>
           </div>
-          <span class="portada__exploradores-texto">Seguido por 12.400 exploradores</span>
         </div>
+      </div>
 
-        <div class="portada__tarjetas">
-          <article class="tarjeta-vidrio">
-            <div class="tarjeta-vidrio__thumb thumb-1"></div>
-            <div class="tarjeta-vidrio__info">
-              <span class="tarjeta-vidrio__etiqueta">Salto entre lianas</span>
-              <span class="tarjeta-vidrio__numero">12 m</span>
-            </div>
-          </article>
-          <article class="tarjeta-vidrio">
-            <div class="tarjeta-vidrio__thumb thumb-2"></div>
-            <div class="tarjeta-vidrio__info">
-              <span class="tarjeta-vidrio__etiqueta">Del día en árboles</span>
-              <span class="tarjeta-vidrio__numero">98%</span>
-            </div>
-          </article>
+      <!-- Banda 2: Interior / Dosel (0.45 - 0.65) -->
+      <div id="banda-2" class="banda-texto banda-texto--arriba">
+        <div class="banda-texto__contenido">
+          <div class="banda-texto__etiqueta">Interior del Árbol · Nivel Medio</div>
+          <h2 class="banda-texto__titulo">La vida en el <em>dosel</em></h2>
+          <p class="banda-texto__bajada">Troncos musgosos, lianas milenarias y rayos filtrados. En la penumbra habitan aves y mariposas de alas brillantes.</p>
+        </div>
+      </div>
+
+      <!-- Banda 3: Piso / Pasto (0.88 - 1.00) -->
+      <div id="banda-3" class="banda-texto banda-texto--abajo">
+        <div class="banda-texto__contenido">
+          <div class="banda-texto__etiqueta">Suelo Selvático · Nivel 0</div>
+          <h2 class="banda-texto__titulo">A tierra <em>firme</em></h2>
+          <p class="banda-texto__bajada">Llegada al claro de helechos. Un instante de descanso tras el viaje por el dosel amazónico.</p>
+          <a class="boton-dorado" href="#pie">Explorar la expedición</a>
         </div>
       </div>
     </div>
+
+    <!-- BARRA INFERIOR DE SCROLL -->
+    <div class="progreso-scroll">
+      <div id="progreso-linea" class="progreso-scroll__linea"></div>
+    </div>
+
   </div>
-</header>
+</section>
 
-<main>
-  <!-- 2a. BANDA QUIETA: TRES DATOS SOBRE EL MONO ARAÑA -->
-  <section class="banda" id="especies">
-    <div class="contenedor">
-      <div class="seccion-encabezado" data-aparecer>
-        <p class="etiqueta">BIOLOGÍA Y HÁBITAT</p>
-        <h2 class="titular-serif">El acróbata del dosel amazónico</h2>
-      </div>
-
-      <div class="grid-tres-columnas">
-        <article class="columna-dato" data-aparecer>
-          <span class="numero-serif">12 m</span>
-          <h3 class="titulo-m">Saltos de precisión</h3>
-          <p class="bajada">Capaz de cubrir distancias de hasta 12 metros entre lianas mediante el impulso elástico de sus extremidades y su cola prensil.</p>
-        </article>
-
-        <article class="columna-dato" data-aparecer>
-          <span class="numero-serif">98%</span>
-          <h3 class="titulo-m">Vida en la copa</h3>
-          <p class="bajada">Pasa prácticamente toda su existencia entre 30 y 40 metros de altura, descendiendo al suelo solo en situaciones excepcionales.</p>
-        </article>
-
-        <article class="columna-dato" data-aparecer>
-          <span class="numero-serif">35 km/h</span>
-          <h3 class="titulo-m">Velocidad de cruce</h3>
-          <p class="bajada">Se desplaza con agilidad suprema entre las ramas más delgadas, alimentándose de frutos silvestres y dispersando semillas claves.</p>
-        </article>
-      </div>
-    </div>
-  </section>
-
-  <!-- 2b. BANDA QUIETA: CIERRE Y EXPEDICIÓN -->
-  <section class="banda grano resplandor" id="expediciones" style="text-align: center;">
-    <div class="contenedor" style="max-width: 44rem; margin-inline: auto;">
-      <p class="etiqueta" data-aparecer>EXPEDICIONES PIONERAS</p>
-      <h2 class="titular-serif-grande" data-aparecer>Un viaje a la selva primaria</h2>
-      <p class="bajada" data-aparecer style="margin-inline: auto; margin-block: 1.2rem 2rem;">
-        Adentrate en los santuarios biológicos más remotos del Amazonas y presenciá la fauna silvestre en su hábitat prístino con guías nativos.
-      </p>
-      <div data-aparecer>
-        <a class="boton-dorado" href="#">Reservar la travesía</a>
-      </div>
-    </div>
-  </section>
-</main>
-
-<footer class="pie-minimo">
+<!-- PIE MÍNIMO -->
+<footer id="pie" class="pie-minimo">
   <div class="contenedor pie-minimo__cuerpo">
-    <p class="nota">© MONO · Dosel Amazónico</p>
-    <p class="etiqueta">Motor webi · Pieza firma de portada</p>
+    <p class="nota">© MONO · Experiencia Interactiva del Motor webi</p>
+    <p class="etiqueta">Kit webi · cuadros.js + puntero.js + motor-scroll.js</p>
   </div>
 </footer>
 
-<!-- JavaScript de la experiencia -->
+<!-- SCRIPT DE LA EXPERIENCIA -->
 <script type="module">
-  import { videoPortada } from "./kit/video-portada.js";
-  import { aparecer, amortiguar, reducido } from "./kit/motor-scroll.js";
+  import { crearCuadros, conScroll } from "./kit/cuadros.js";
+  import { escenario, bucle, amortiguar, reducido } from "./kit/motor-scroll.js";
+  import { puntero } from "./kit/puntero.js";
 
-  // Iniciar animaciones de scroll para las bandas inferiores
-  aparecer();
+  const elEscenario = document.querySelector("[data-escenario]");
+  const canvasFondo = document.getElementById("canvas-fondo");
+  const elFallback = document.getElementById("fondo-fallback");
+  const elCargador = document.getElementById("cargador");
+  const elCargadorProgreso = document.getElementById("cargador-progreso");
 
-  const elPortada = document.getElementById("portada");
-  const elVideo = elPortada.querySelector("video");
-  const elFinal = elPortada.querySelector(".portada__final");
-  const elRecorte = elPortada.querySelector(".portada__recorte");
-  const elTituloCaja = document.getElementById("titulo-caja");
-  const elBtnRepetir = document.getElementById("btn-repetir");
+  const elMonoScroll = document.getElementById("mono-scroll");
+  const elMonoPuntero = document.getElementById("mono-puntero");
+  const elMonoCuerpo = document.getElementById("mono-cuerpo");
 
-  let congelado = false;
+  const elCapaVida = document.getElementById("capa-vida");
 
-  // Callback cuando el video se reproduce entero y congela
-  function alCongelar() {
-    congelado = true;
-    elPortada.classList.add("es-congelado");
-  }
+  const elBanda1 = document.getElementById("banda-1");
+  const elBanda2 = document.getElementById("banda-2");
+  const elBanda3 = document.getElementById("banda-3");
+  const elProgresoLinea = document.getElementById("progreso-linea");
 
-  // Inicializar control del video con kit/video-portada.js
-  const portadaControl = videoPortada(elVideo, {
-    modo: "una-vez",
-    final: elFinal,
-    recorte: elRecorte,
-    alTerminar: alCongelar
-  });
-
-  // Botón Repetir
-  elBtnRepetir.addEventListener("click", () => {
-    congelado = false;
-    elPortada.classList.remove("es-congelado");
-    // Resetear posición de parallax del contenedor
-    elTituloCaja.style.transform = "none";
-    targetX = 0;
-    targetY = 0;
-    currentX = 0;
-    currentY = 0;
-    portadaControl.reproducir();
-  });
-
-  // Si reduce movimiento o autoplay se bloqueó inmediatamente, marcar congelado
+  // Si se pide reducir movimiento, mostrar imagen fija de suelo o poster
   if (reducido()) {
-    alCongelar();
+    canvasFondo.style.display = "none";
+    elFallback.src = "medios/suelo.jpg";
+    elFallback.style.display = "block";
+    elCargador.classList.add("oculto");
   }
 
-  // Interacción sutil con el puntero SOLO después de congelar:
-  // Aplicar parallax AL CONTENEDOR .portada__titulo-caja para no interrumpir la transición del h1.
-  let targetX = 0;
-  let targetY = 0;
-  let currentX = 0;
-  let currentY = 0;
-  let animFrame = null;
+  // 1. INICIALIZAR PELÍCULA DE CUADROS DEL FONDO
+  let peli = null;
+  let subScrollPeli = null;
 
-  function loopPuntero() {
-    if (congelado && !reducido()) {
-      currentX = amortiguar(currentX, targetX, 0.1, 1 / 60);
-      currentY = amortiguar(currentY, targetY, 0.1, 1 / 60);
-      elTituloCaja.style.transform = `translate(${currentX.toFixed(2)}px, ${currentY.toFixed(2)}px)`;
+  if (!reducido()) {
+    peli = crearCuadros(canvasFondo, {
+      fuente: "medios/descenso/descenso-####.webp",
+      total: 96,
+      encaje: "cubrir",
+      foco: [0.5, 0.45],
+      alCargar: (p) => {
+        if (elCargadorProgreso) {
+          elCargadorProgreso.style.width = `${Math.round(p * 100)}%`;
+        }
+        if (p >= 0.05 && elCargador) {
+          // Ocultar el cargador en cuanto el primer tramo esté listo
+          setTimeout(() => elCargador.classList.add("oculto"), 300);
+        }
+      }
+    });
+
+    subScrollPeli = conScroll(peli, elEscenario, { tramo: [0, 1], suavizar: 0.1 });
+  }
+
+  // 2. INTERACCIÓN CON EL PUNTERO (MONO Y BICHO PARALLAX)
+  const punt = puntero(document.body, { suavizar: 0.14 });
+
+  let actualPunteroX = 0.5;
+  let actualPunteroY = 0.5;
+  let tiempoReloj = 0;
+
+  // 3. CONTROL DE SCROLL Y BUCLE DE ANIMACIÓN
+  let progresoActual = 0;
+  let progresoSuave = 0;
+
+  const subEscenario = escenario(elEscenario, (p) => {
+    progresoActual = p;
+  }, { suavizar: 0.08 });
+
+  bucle((t, dt) => {
+    tiempoReloj += dt;
+    progresoSuave = amortiguar(progresoSuave, progresoActual, 0.15, dt);
+
+    if (reducido()) return;
+
+    // Actualizar barra de progreso inferior
+    if (elProgresoLinea) {
+      elProgresoLinea.style.width = `${(progresoSuave * 100).toFixed(1)}%`;
     }
-    animFrame = requestAnimationFrame(loopPuntero);
-  }
-  animFrame = requestAnimationFrame(loopPuntero);
 
-  window.addEventListener("pointermove", (e) => {
-    if (!congelado || reducido()) return;
-    const cx = window.innerWidth / 2;
-    const cy = window.innerHeight / 2;
-    // desplazamiento opuesto al cursor, máximo 10px
-    targetX = -((e.clientX - cx) / cx) * 10;
-    targetY = -((e.clientY - cy) / cy) * 10;
+    // A) MOVIMIENTO DEL MONO SEGÚN SCROLL
+    // Vertical: translateY de 0% a +10% de la pantalla, scale de 1.06 a 0.92 (baja hacia el pasto)
+    const monoTranslateY = (progresoSuave * 10).toFixed(2);
+    const monoScale = (1.06 - progresoSuave * 0.14).toFixed(3);
+    elMonoScroll.style.transform = `translate3d(0, ${monoTranslateY}%, 0) scale(${monoScale})`;
+
+    // B) SEGUIMIENTO DEL PUNTERO Y VAIVÉN EN REPOSO DEL MONO
+    let targetX = punt.x;
+    let targetY = punt.y;
+
+    // Si no hay interacción con mouse, vaivén automático suave
+    if (!punt.dentro) {
+      targetX = 0.5 + Math.sin(tiempoReloj * 0.8) * 0.08;
+      targetY = 0.5 + Math.cos(tiempoReloj * 0.6) * 0.04;
+    }
+
+    actualPunteroX = amortiguar(actualPunteroX, targetX, 0.12, dt);
+    actualPunteroY = amortiguar(actualPunteroY, targetY, 0.12, dt);
+
+    // Mapear x (0..1) a translateX (-6% a +6%) y rotación (-3deg a +3deg)
+    const monoOffsetX = ((actualPunteroX - 0.5) * 12).toFixed(2);
+    const monoRotate = ((actualPunteroX - 0.5) * 6).toFixed(2);
+    elMonoPuntero.style.transform = `translate3d(${monoOffsetX}%, 0, 0) rotate(${monoRotate}deg)`;
+
+    // C) ATERRIZAJE Y GOLPE DE PECHO EN EL PASTO (último ~8% del scroll: progreso >= 0.92)
+    if (progresoSuave >= 0.92) {
+      elMonoCuerpo.classList.add("golpe-pecho");
+    } else {
+      elMonoCuerpo.classList.remove("golpe-pecho");
+    }
+
+    // D) CAPA VIDA (MARIPOSA Y GUACAMAYO) EN EL TRAMO MEDIO (0.35 a 0.80)
+    let opacidadVida = 0;
+    if (progresoSuave >= 0.35 && progresoSuave <= 0.80) {
+      if (progresoSuave < 0.45) {
+        opacidadVida = (progresoSuave - 0.35) / 0.10; // Fade in
+      } else if (progresoSuave > 0.70) {
+        opacidadVida = (0.80 - progresoSuave) / 0.10; // Fade out
+      } else {
+        opacidadVida = 1;
+      }
+    }
+    elCapaVida.style.opacity = opacidadVida.toFixed(2);
+
+    // Parallax suave con el puntero para la fauna
+    const bichoParallaxX = ((actualPunteroX - 0.5) * -20).toFixed(1);
+    const bichoParallaxY = ((actualPunteroY - 0.5) * -15).toFixed(1);
+    elCapaVida.style.transform = `translate3d(${bichoParallaxX}px, ${bichoParallaxY}px, 0)`;
+
+    // E) ACTIVACIÓN DE BANDAS DE TEXTO SEGÚN SCROLL
+    // Banda 1: 0.00 - 0.18
+    if (progresoSuave <= 0.22) {
+      elBanda1.classList.add("activa");
+    } else {
+      elBanda1.classList.remove("activa");
+    }
+
+    // Banda 2: 0.45 - 0.65
+    if (progresoSuave >= 0.38 && progresoSuave <= 0.72) {
+      elBanda2.classList.add("activa");
+    } else {
+      elBanda2.classList.remove("activa");
+    }
+
+    // Banda 3: 0.88 - 1.00
+    if (progresoSuave >= 0.84) {
+      elBanda3.classList.add("activa");
+    } else {
+      elBanda3.classList.remove("activa");
+    }
   });
 
-  window.addEventListener("mouseleave", () => {
-    targetX = 0;
-    targetY = 0;
+  // Limpieza al desmontar/cerrar
+  window.addEventListener("unload", () => {
+    subScrollPeli?.destruir();
+    subEscenario?.destruir();
+    punt?.destruir();
+    peli?.destruir();
   });
 </script>
 </body>

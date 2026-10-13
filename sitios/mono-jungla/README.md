@@ -1,59 +1,66 @@
-# Mono en la Jungla — Portada Fotorrealista con Video Congelado y Recorte Alfa
+# Mono en la Jungla — El Descenso Interactivo (Motor webi)
 
-Página editorial y experiencia inmersiva para **Mono en la Jungla**, construida sobre el **Motor webi** (`kit/`) sin dependencias ni paso de compilación.
-
-Inspirada en el nivel de pulido editorial y dinamismo de la plantilla "Eagle" de Scrolltide.
+Experiencia inmersiva e interactiva guiada por scroll para **Mono en la Jungla**, construida sobre el **Motor webi** (`kit/`) sin dependencias ni paso de compilación.
 
 ---
 
-## Concepto y Técnica
+## Concepto
 
-La experiencia presenta una **PORTADA** (Hero) a pantalla completa (`100svh`, mín. `600px`) dominada por un video fotorrealista a sangre de un mono araña balanceándose en la selva.
+El usuario desciende por un árbol de la selva amazónica junto a un mono araña a lo largo de un **escenario fijo de 520vh** sticky a pantalla completa:
 
-### Técnica de Capas y Recorte Alfa
-A través del módulo `kit/video-portada.js` con el modo `"una-vez"`, se logra un título monumental que queda posicionado **DETRÁS** del animal sin interrupciones de reproducción:
-
-1. **Video (`mono-web.mp4`):** Se reproduce una sola vez (6.6 s).
-2. **Empalme Invisible:** Al finalizar, el video se congela y oculta mostrando `mono-final.jpg` (último fotograma exacto).
-3. **Revelación del Título y Recorte:** En el callback `alTerminar`, el título gigante **"MONO"** se anima e ingresa, al tiempo que se activa la capa `mono-recorte.webp` (imagen con canal alfa del mono y la liana) por encima del título.
-4. **Calce Perfecto:** Video, fotograma final y recorte alfa comparten la misma caja CSS, con `object-fit: cover` y `object-position: 50% 40%` para un encaje pixel a pixel en cualquier resolución.
-5. **Efecto Parallax:** Tras congelar, mover el cursor aplica un leve desplazamiento al título opuesto al puntero (máx. 10px), mientras el mono permanece estático para no descalzarse.
+- **Inicio (Scroll 0.0):** Copa del árbol, cielo claro entre las hojas y aves a lo lejos.
+- **Tramo Medio (Scroll 0.35 – 0.80):** Interior del árbol con troncos musgosos, lianas, vida silvestre (guacamayo y mariposas cruzando) y rayos de luz filtrados.
+- **Final (Scroll 0.88 – 1.0):** Claro de pasto a nivel del suelo. Al llegar al pasto, el mono aterriza y ejecuta un **golpe de pecho** ritual.
+- **Rebobinado:** Al subir el scroll, todo el viaje retrocede de forma sincronizada.
 
 ---
 
-## Paleta de Color y Tipografías
+## Arquitectura y Componentes del Kit
 
-- **Fondo Oscuro:** `#0B140C` (verde selva profundo / casi negro)
-- **Texto Principal / Crema:** `#F4EFE1`
-- **Acento Dorado:** `#E0B04A`
-- **Tipografías:**
-  - `Archivo Black` (Título gigante "MONO" de 80vw)
-  - `Instrument Serif` (Titulares principales e itálicas de acento)
-  - `Instrument Sans` (Texto de lectura y navegación)
-  - `JetBrains Mono` (Etiquetas y datos numéricos)
+Se emplean módulos reutilizables del kit (`kit/`) como ES Modules nativos:
 
----
-
-## Estructura de Secciones
-
-1. **Portada Inmersiva:**
-   - Nav transparente con marca, enlaces de navegación y CTA.
-   - Bloque editorial inferior izquierdo con titular serif y CTAs de acción.
-   - Bloque derecho con avatares en CSS clip y tarjetas de vidrio (`backdrop-filter`) con datos del mono araña.
-   - Botón discreto "Repetir" para volver a reproducir la travesía.
-2. **Tres Datos Fundamentales:**
-   - Banda en `#0B140C` con tres columnas informativas sobre la física, braquiación y alimentación del mono araña, encabezadas por números serif monumentales.
-3. **Cierre y Pie de Página:**
-   - Titular serif de llamada a la acción, botón dorado de reserva y footer con copyright e isotipo.
+1. **`motor-scroll.js` (`escenario`, `bucle`, `amortiguar`, `reducido`):**
+   - Controla el escenario fijo `<section data-escenario style="--largo: 520vh"><div data-escena>`.
+   - Ejecuta un único bucle a 60 fps sincronizado para actualizar transformaciones y opacidades.
+2. **`cuadros.js` (`crearCuadros`, `conScroll`):**
+   - Reproduce los 96 cuadros de `medios/descenso/descenso-####.webp` (1280x720) sobre `<canvas id="canvas-fondo">` con encaje `"cubrir"` y foco `[0.5, 0.45]`.
+   - Sincroniza el fotograma exacto con la posición del scroll con inercia suave.
+   - Incluye indicador de progreso de carga inicial.
+3. **`puntero.js` (`puntero`):**
+   - Lee la posición relativa del cursor/dedo con inercia suave.
+   - Aplica un desplazamiento horizontal y leve rotación de vaivén al mono (como si se hamacara en la liana).
+   - Sin interacción activa del cursor, genera un vaivén automático en reposo.
 
 ---
 
-## Recursos en `medios/`
+## Estructura de Capas en HTML/CSS
 
-- `mono-web.mp4`: Clip 1080p a 6.6 s (mono araña entrando en liana).
-- `mono-poster.jpg`: Fotograma inicial.
-- `mono-final.jpg`: Fotograma final exacto.
-- `mono-recorte.webp`: Recorte alfa del mono y la liana del fotograma final.
+- **Z-Index 1:** `<canvas id="canvas-fondo">` (Película del descenso).
+- **Z-Index 3:** `.capa-vida` (Fauna: `guacamayo.webp` y `mariposa.webp` con animación de cruce continuo y parallax del puntero, visibles solo en el tramo medio).
+- **Z-Index 4:** `#mono-scroll > #mono-puntero > #mono-cuerpo` (Mono protagonista en `mono-recorte.webp` con jerarquía de wrappers independientes para separar `translateY`/`scale` por scroll del `translateX`/`rotate` por puntero).
+- **Z-Index 5:** `.capa-atmosfera` (Vignette radial oscura en bordes + rayo de luz en degradé + textura `.grano`).
+- **Z-Index 6:** `.capa-textos` (3 bandas de texto cinematográfico en crema/dorado: *El Descenso*, *La vida en el árbol*, *A tierra firme*).
+- **Z-Index 10:** Nav superior transparente y barra inferior de progreso de scroll.
+
+---
+
+## Pendiente: Reemplazo del Golpe de Pecho Real
+
+Actualmente, al llegar al final del scroll (último ~8%, progreso ≥ 0.92) se activa la clase CSS `.golpe-pecho` en `#mono-cuerpo`. Esta animación es un **placeholder por código** (pulso de escala + ritmo rápido de toque de pecho) mientras se produce el video final.
+
+### Cómo reemplazarlo cuando esté listo el video real:
+1. Agregar el clip de video (formato MP4/WebM con canal alfa o video recortado) en `medios/mono-golpe-pecho.mp4`.
+2. En `index.html`, instanciar un elemento `<video>` transparente dentro de `#mono-cuerpo` (o reemplazar la etiqueta `<img>` al llegar al progreso ≥ 0.92).
+3. Reproducir el video con bucle o mediante `videoPortada` / `videoConScroll`.
+
+---
+
+## Reducción de Movimiento (`prefers-reduced-motion`)
+
+Si el usuario tiene activada la preferencia de movimiento reducido:
+- Se inhabilita el scrub y el movimiento interactivo.
+- Se muestra la imagen estática de respaldo (`medios/suelo.jpg`).
+- Los textos permanecen visibles y legibles en flujo natural.
 
 ---
 
@@ -63,4 +70,4 @@ A través del módulo `kit/video-portada.js` con el modo `"una-vez"`, se logra u
    ```bash
    node herramientas/servidor.js sitios/mono-jungla 5191
    ```
-2. Abrir en el navegador: `http://localhost:5191/` o mediante `npm run banco` en `http://localhost:5190/sitios/mono-jungla/`.
+2. Abrir en el navegador: `http://localhost:5191/` o mediante el banco de pruebas: `npm run banco` en `http://localhost:5190/sitios/mono-jungla/`.
