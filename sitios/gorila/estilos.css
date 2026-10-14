@@ -25,7 +25,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: opacity 0.8s ease, visibility 0.8s ease;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 
 .cargador.oculto {
@@ -36,7 +36,8 @@ body {
 
 .cargador-contenido {
   text-align: center;
-  max-width: 400px;
+  width: 100%;
+  max-width: 360px;
   padding: 2rem;
 }
 
@@ -50,7 +51,7 @@ body {
 
 .barra-progreso {
   width: 100%;
-  height: 4px;
+  height: 6px;
   background: rgba(255, 255, 255, 0.1);
   border-radius: 999px;
   overflow: hidden;
@@ -60,14 +61,15 @@ body {
   width: 0%;
   height: 100%;
   background: var(--acento);
-  transition: width 0.2s ease;
+  transition: width 0.1s linear;
 }
 
 .progreso-texto {
   font-family: var(--f-mono, monospace);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: var(--bruma, #a3b0a8);
   margin-top: 0.8rem;
+  font-weight: 600;
 }
 
 /* Escenario y escena */
@@ -98,28 +100,29 @@ body {
 /* Gorila contenedor */
 .contenedor-gorila {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 100%;
-  height: 100%;
-  transform: translate(-50%, -50%) scale(1);
-  transform-origin: center center;
+  top: 0;
+  left: 58%;
+  width: 100vw;
+  height: 100vh;
+  transform: translate(-50%, 0) scale(1);
+  transform-origin: top center;
   pointer-events: none;
-  will-change: transform, filter;
-  transition: filter 0.2s ease;
+  will-change: transform, filter, opacity;
+  transition: filter 0.2s ease, opacity 0.25s ease;
 }
 
-/* Sombra de piso */
+/* Sombra de piso al aterrizar */
 .sombra-piso {
   position: absolute;
-  bottom: 8%;
+  bottom: 8.5%;
   left: 50%;
-  width: 40vw;
-  height: 60px;
+  width: 450px;
+  max-width: 80vw;
+  height: 50px;
   transform: translateX(-50%);
-  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0) 70%);
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0) 75%);
   opacity: 0;
-  transition: opacity 0.5s ease;
+  transition: opacity 0.4s ease;
   pointer-events: none;
 }
 
@@ -131,20 +134,20 @@ body {
 .neblina {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 50% 30%, rgba(20, 45, 30, 0.15) 0%, rgba(5, 10, 8, 0.45) 80%);
+  background: radial-gradient(circle at 50% 30%, rgba(20, 45, 30, 0.1) 0%, rgba(5, 10, 8, 0.4) 80%);
   pointer-events: none;
 }
 
 .vinieta {
   position: absolute;
   inset: 0;
-  box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.7);
+  box-shadow: inset 0 0 140px rgba(0, 0, 0, 0.75);
   transition: box-shadow 0.3s ease;
   pointer-events: none;
 }
 
 .vinieta.cerrada {
-  box-shadow: inset 0 0 250px rgba(0, 0, 0, 0.95);
+  box-shadow: inset 0 0 280px rgba(0, 0, 0, 0.98);
 }
 
 .follaje-piso {
@@ -152,40 +155,77 @@ body {
   bottom: 0;
   left: 0;
   right: 0;
-  height: 25vh;
-  background: linear-gradient(to top, rgba(3, 8, 5, 0.9) 0%, rgba(3, 8, 5, 0.4) 50%, rgba(3, 8, 5, 0) 100%);
+  height: 30vh;
+  background: linear-gradient(to top, rgba(2, 6, 4, 0.96) 0%, rgba(2, 6, 4, 0.6) 45%, rgba(2, 6, 4, 0) 100%);
   pointer-events: none;
 }
 
-/* Textos Narrativa */
+/* Textos Narrativa en Columna Lateral Desktop */
 .textos-capa {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  display: flex;
-  justify-content: center;
-  padding-top: max(4rem, 8vh);
+  z-index: 10;
+}
+
+.columna-textos {
+  position: absolute;
+  top: 50%;
+  left: 8vw;
+  transform: translateY(-50%);
+  width: 32vw;
+  max-width: 460px;
+  min-width: 280px;
 }
 
 .texto-tramo {
   position: absolute;
-  top: max(4rem, 8vh);
-  left: 50%;
-  transform: translateX(-50%) translateY(20px);
-  text-align: center;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%) translateX(-20px);
   opacity: 0;
-  transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1), transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-  max-width: 90vw;
+  transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1), transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  text-align: left;
 }
 
 .texto-tramo.visible {
   opacity: 1;
-  transform: translateX(-50%) translateY(0);
+  transform: translateY(-50%) translateX(0);
 }
 
 .texto-tramo h2 {
-  margin-top: 0.3rem;
-  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
+  margin-top: 0.4rem;
+  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.9);
+}
+
+/* Adaptación Celular (<900px) */
+@media (max-width: 899px) {
+  .contenedor-gorila {
+    left: 50%;
+  }
+
+  .columna-textos {
+    top: auto;
+    bottom: 8vh;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90vw;
+    max-width: none;
+    text-align: center;
+  }
+
+  .texto-tramo {
+    top: auto;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%) translateY(15px);
+    text-align: center;
+    width: 100%;
+  }
+
+  .texto-tramo.visible {
+    transform: translateX(-50%) translateY(0);
+  }
 }
 
 /* Temblor de cámara */

@@ -18,6 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const elTexto1 = document.getElementById("texto-1");
   const elTexto2 = document.getElementById("texto-2");
   const elTexto3 = document.getElementById("texto-3");
+  const elTexto4 = document.getElementById("texto-4");
 
   // Selección de resolución de fondo
   const usa720 = window.innerWidth <= 768;
@@ -33,11 +34,11 @@ document.addEventListener("DOMContentLoaded", () => {
   let pelBajada = null;
   let pelSuelo = null;
 
-  // Película activa actual en el canvas del gorila para evitar que cargas en background pisen el dibujo
+  // Película activa actual en el canvas del gorila
   let peliculaActivaGorila = null;
 
-  // Wrapper para llamar a irA / ir en la película activa sin colisiones
   function mostrarCuadroGorila(pel, indice) {
+    if (!pel) return;
     peliculaActivaGorila = pel;
     pel.irA(indice);
   }
@@ -57,22 +58,12 @@ document.addEventListener("DOMContentLoaded", () => {
     if (elProgresoTexto) elProgresoTexto.textContent = `${porcentaje}%`;
   }
 
-  // Interceptar alCargar para que si una película no activa se carga en background, no pise el canvas si no es la activa
-  function crearConGuardia(canvas, opciones, clavePelicula) {
-    const origAlCargar = opciones.alCargar;
-    return crearCuadros(canvas, {
-      ...opciones,
-      alCargar: (p) => {
-        if (origAlCargar) origAlCargar(p);
-      }
-    });
-  }
-
   // Inicializar películas críticas
   pelFondo = crearCuadros(elCanvasFondo, {
     fuente: patronFondo,
     total: 63,
     encaje: "cubrir",
+    foco: [0.5, 0.0], // Inicialmente foco arriba (cielo, montañas, aves)
     alCargar: (p) => { cargas.fondo = p; actualizarProgresoCarga(); }
   });
 
@@ -133,16 +124,19 @@ document.addEventListener("DOMContentLoaded", () => {
   /* -------------------------------------------------------------
      LÓGICA DE INTERACCIÓN Y ESTADOS
   ------------------------------------------------------------- */
-  let estadoActual = "tramo1"; // "tramo1", "llegada", "tramo2", "tramo3", "final"
+  let estadoActual = "tramo1"; // "tramo1", "tramo2", "tramo3", "final"
   let progresoScroll = 0;
 
   // Timers y animación de grito
   let gritoEnEjecucion = false;
+  let gritoFundido = false;
   let timerGritoRepetitivo = null;
   let gritoTiempoInicio = 0;
 
-  // Interacción con Puntero (Tramo 2)
+  // Interacción con Puntero
   const miPuntero = puntero(document.body, { suavizar: 0.12 });
+  let inerciaRotacion = 0;
+  let inerciaTranslateX = 0;
 
   // Pauta para animación de `suelo` en bumerán (Final)
   let sueloDireccion = 1; // 1 = adelante, -1 = atrás
@@ -154,18 +148,27 @@ document.addEventListener("DOMContentLoaded", () => {
   // Bucle principal de render / actualización
   let bucleConsola = bucle((t, dt) => {
     if (reducido()) {
-      // Modo movimiento reducido
       pelFondo.ir(0);
+      pelFondo.foco(0.5, 0.0);
       mostrarCuadroGorila(pelMirada, 0);
       if (elContenedorGorila) {
-        elContenedorGorila.style.transform = "translate(-50%, -50%) scale(0.85)";
+        elContenedorGorila.style.transform = "translate(-50%, 0) scale(0.85)";
         elContenedorGorila.style.filter = "none";
       }
       return;
     }
 
-    // Actualizar fondo según scroll (0..1 -> 0..62)
+    // Actualizar fondo según scroll (0..1 -> 0..62) y foco vertical
     pelFondo.ir(progresoScroll);
+
+    // Animación de foco vertical: 0.0 en 0% -> 0.55 en 35% -> 0.75 en 100%
+    let focoY = 0.0;
+    if (progresoScroll < 0.35) {
+      focoY = mapear(progresoScroll, 0, 0.35, 0.0, 0.55);
+    } else {
+      focoY = mapear(progresoScroll, 0.35, 1.0, 0.55, 0.75);
+    }
+    pelFondo.foco(0.5, focoY);
 
     // Gestor de Textos
     actualizarTextos(progresoScroll);
@@ -179,7 +182,6 @@ document.addEventListener("DOMContentLoaded", () => {
     } else if (progresoScroll >= 0.35 && progresoScroll < 0.80) {
       // TRAMO 2 (35% - 80%)
       if (estadoActual === "tramo1") {
-        // Recién llegado al 35%
         estadoActual = "tramo2";
         dispararGrito();
         iniciarTimerGrito();
@@ -201,7 +203,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  /* --- TRAMO 1: Aparición y péndulo --- */
+  /* --- TRAMO 1: Aparición desde las alturas --- */
   function ejecutarTramo1(t, dt, p) {
     if (gritoEnEjecucion) {
       detenerGrito();
@@ -211,18 +213,41 @@ document.addEventListener("DOMContentLoaded", () => {
     const cuadroBalanceo = (Math.floor(t * 12) % 61);
     mostrarCuadroGorila(pelBalanceo, cuadroBalanceo);
 
-    const escala = 0.15 + (0.85 - 0.15) * pTramo;
-    const desvioX = Math.sin(pTramo * Math.PI * 2) * 15;
-    const desenfoque = (1 - pTramo) * 3;
+    // Escala desde 0.12 hasta 0.85
+    const escala = 0.12 + (0.85 - 0.12) * pTramo;
+
+    // Péndulo en arco
+    const desvioX = Math.sin(pTramo * Math.PI * 2) * 12; // lateral %
+    const desenfoque = (1 - pTramo) * 3; // px blur
     const contraste = 0.8 + 0.2 * pTramo;
 
-    elContenedorGorila.style.transform = `translate(calc(-50% + ${desvioX}vw), -50%) scale(${escala})`;
+    const baseLeft = window.innerWidth >= 900 ? "58%" : "50%";
+    elContenedorGorila.style.left = baseLeft;
+    elContenedorGorila.style.top = "0px";
+    elContenedorGorila.style.transform = `translate(calc(-50% + ${desvioX}vw), 0) scale(${escala})`;
     elContenedorGorila.style.filter = `blur(${desenfoque}px) contrast(${contraste})`;
   }
 
-  /* --- TRAMO 2: Mirada / Puntero / Grito ocasional --- */
+  /* --- TRAMO 2: Mirada interactiva continua 25->46 --- */
   function ejecutarTramo2(t, dt, p) {
-    elContenedorGorila.style.transform = `translate(-50%, -50%) scale(0.85)`;
+    const baseLeft = window.innerWidth >= 900 ? "58%" : "50%";
+    elContenedorGorila.style.left = baseLeft;
+    elContenedorGorila.style.top = "0px";
+
+    // Inercia de cuerpo (rotación +/- 2deg, translation +/- 1.5vw)
+    let pxActual = 0.5;
+    if (miPuntero.tipo === "touch" || !miPuntero.dentro) {
+      pxActual = 0.5 + 0.3 * Math.sin(t * 0.8);
+    } else {
+      pxActual = miPuntero.x;
+    }
+
+    const rotObjetivo = (pxActual - 0.5) * 4; // -2 deg a +2 deg
+    const transObjetivo = (pxActual - 0.5) * 3; // -1.5vw a +1.5vw
+    inerciaRotacion = amortiguar(inerciaRotacion, rotObjetivo, 0.1, dt);
+    inerciaTranslateX = amortiguar(inerciaTranslateX, transObjetivo, 0.1, dt);
+
+    elContenedorGorila.style.transform = `translate(calc(-50% + ${inerciaTranslateX}vw), 0) scale(0.85) rotate(${inerciaRotacion}deg)`;
     elContenedorGorila.style.filter = "none";
 
     if (gritoEnEjecucion) {
@@ -243,32 +268,19 @@ document.addEventListener("DOMContentLoaded", () => {
         detenerGrito();
       }
     } else {
-      let frameMirada = 0;
-
-      if (miPuntero.tipo === "touch" || !miPuntero.dentro) {
-        const oscilacion = 0.5 + 0.5 * Math.sin(t * 0.8);
-        frameMirada = calcularFrameMirada(oscilacion);
-      } else {
-        frameMirada = calcularFrameMirada(miPuntero.x);
-      }
-
+      // Mapeo continuo x [0..1] -> cuadros 25 -> 46
+      const frameMirada = 25 + pxActual * (46 - 25);
       mostrarCuadroGorila(pelMirada, frameMirada);
     }
   }
 
-  function calcularFrameMirada(x) {
-    if (x < 0.45) {
-      return Math.round(mapear(x, 0, 0.45, 22, 1));
-    } else if (x > 0.55) {
-      return Math.round(mapear(x, 0.55, 1, 1, 42));
-    } else {
-      return 0;
-    }
-  }
-
-  /* --- TRAMO 3: Bajada al piso --- */
+  /* --- TRAMO 3: Bajada colgado --- */
   function ejecutarTramo3(t, dt, p) {
     detenerGrito();
+
+    const baseLeft = window.innerWidth >= 900 ? "58%" : "50%";
+    elContenedorGorila.style.left = baseLeft;
+    elContenedorGorila.style.top = "0px";
 
     const pTramo = mapear(p, 0.80, 1.0, 0, 1);
     const cuadroBajada = Math.min(77, Math.floor(pTramo * 78));
@@ -276,13 +288,13 @@ document.addEventListener("DOMContentLoaded", () => {
     if (pelBajada) {
       mostrarCuadroGorila(pelBajada, cuadroBajada);
     } else {
-      mostrarCuadroGorila(pelMirada, 0);
+      mostrarCuadroGorila(pelMirada, 37);
     }
 
-    elContenedorGorila.style.transform = `translate(-50%, -50%) scale(0.85)`;
+    elContenedorGorila.style.transform = `translate(-50%, 0) scale(0.85)`;
     elContenedorGorila.style.filter = "none";
 
-    if (pTramo > 0.95) {
+    if (pTramo > 0.92) {
       elSombraPiso.classList.add("visible");
     } else {
       elSombraPiso.classList.remove("visible");
@@ -311,14 +323,20 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (pelSuelo) {
-      mostrarCuadroGorila(pelSuelo, Math.floor(sueloIndiceActual));
+      mostrarCuadroGorila(pelSuelo, sueloIndiceActual);
     }
 
-    const targetX = (miPuntero.x - 0.5) * 10;
+    const pxActual = miPuntero.tipo === "touch" || !miPuntero.dentro ? 0.5 : miPuntero.x;
+    const targetX = (pxActual - 0.5) * 8; // -4vw a +4vw
     sueloOffsetX = amortiguar(sueloOffsetX, targetX, 0.05, dt);
 
+    const baseLeft = window.innerWidth >= 900 ? "58%" : "50%";
+    elContenedorGorila.style.left = baseLeft;
+    elContenedorGorila.style.top = "auto";
+    elContenedorGorila.style.bottom = "0px";
+
     const transformEspejo = sueloEspejado ? "scaleX(-1)" : "scaleX(1)";
-    elContenedorGorila.style.transform = `translate(calc(-50% + ${sueloOffsetX}vw), -50%) scale(0.85) ${transformEspejo}`;
+    elContenedorGorila.style.transform = `translate(calc(-50% + ${sueloOffsetX}vw), 0) scale(0.85) ${transformEspejo}`;
   }
 
   /* --- Funciones Auxiliares de Grito --- */
@@ -329,9 +347,19 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function detenerGrito() {
-    gritoEnEjecucion = false;
-    elEscena.classList.remove("temblor");
-    elVinieta.classList.remove("cerrada");
+    if (gritoEnEjecucion) {
+      gritoEnEjecucion = false;
+      elEscena.classList.remove("temblor");
+      elVinieta.classList.remove("cerrada");
+
+      // Fundido corto de 250ms para suavizar la vuelta
+      if (elContenedorGorila) {
+        elContenedorGorila.style.opacity = "0.7";
+        setTimeout(() => {
+          if (elContenedorGorila) elContenedorGorila.style.opacity = "1";
+        }, 250);
+      }
+    }
   }
 
   function iniciarTimerGrito() {
@@ -356,14 +384,22 @@ document.addEventListener("DOMContentLoaded", () => {
       elTexto1.classList.add("visible");
       elTexto2.classList.remove("visible");
       elTexto3.classList.remove("visible");
-    } else if (p >= 0.30 && p < 0.75) {
+      elTexto4.classList.remove("visible");
+    } else if (p >= 0.30 && p < 0.55) {
       elTexto1.classList.remove("visible");
       elTexto2.classList.add("visible");
       elTexto3.classList.remove("visible");
-    } else {
+      elTexto4.classList.remove("visible");
+    } else if (p >= 0.55 && p < 0.80) {
       elTexto1.classList.remove("visible");
       elTexto2.classList.remove("visible");
       elTexto3.classList.add("visible");
+      elTexto4.classList.remove("visible");
+    } else {
+      elTexto1.classList.remove("visible");
+      elTexto2.classList.remove("visible");
+      elTexto3.classList.remove("visible");
+      elTexto4.classList.add("visible");
     }
   }
 
