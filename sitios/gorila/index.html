@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gorila Gigante — Experiencia en la Jungla</title>
+  <link rel="stylesheet" href="./lib/tokens.css">
+  <link rel="stylesheet" href="./estilos.css">
+</head>
+<body>
+
+  <!-- Cargador de inicio -->
+  <div id="cargador" class="cargador">
+    <div class="cargador-contenido">
+      <span class="etiqueta">Expedición Selva</span>
+      <h1 class="cargador-titulo">Penetrando la jungla...</h1>
+      <div class="barra-progreso">
+        <div id="progreso-barra" class="progreso-linea"></div>
+      </div>
+      <p id="progreso-texto" class="progreso-texto">0%</p>
+    </div>
+  </div>
+
+  <!-- Escenario Fijo con Scroll (~600vh) -->
+  <section data-escenario class="escenario" style="--largo: 600vh">
+    <div data-escena id="escena" class="escena">
+
+      <!-- Capa 1: Fondo Selva / Montañas -->
+      <canvas id="canvas-fondo" class="canvas-capa"></canvas>
+
+      <!-- Capa 2: Neblina / Atmósfera -->
+      <div class="neblina"></div>
+
+      <!-- Capa 3: Viñeteado -->
+      <div id="vinieta" class="vinieta"></div>
+
+      <!-- Capa 4: Gorila + Sombra -->
+      <div id="contenedor-gorila" class="contenedor-gorila">
+        <canvas id="canvas-gorila" class="canvas-capa"></canvas>
+        <div id="sombra-piso" class="sombra-piso"></div>
+      </div>
+
+      <!-- Capa 5: Follaje inferior y piso -->
+      <div class="follaje-piso"></div>
+
+      <!-- Capa 6: Textos narrativa -->
+      <div class="textos-capa">
+        <div id="texto-1" class="texto-tramo t1">
+          <span class="etiqueta">En las alturas</span>
+          <h2 class="titulo-xl">Allá arriba, algo se mueve.</h2>
+        </div>
+
+        <div id="texto-2" class="texto-tramo t2">
+          <span class="etiqueta">Encuentro</span>
+          <h2 class="titulo-xl">No estás solo.</h2>
+        </div>
+
+        <div id="texto-3" class="texto-tramo t3">
+          <span class="etiqueta">Dominio</span>
+          <h2 class="titulo-xl">Bienvenido a su selva.</h2>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
