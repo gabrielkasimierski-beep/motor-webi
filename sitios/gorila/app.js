@@ -59,20 +59,15 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         };
 
-        img.decode().then(() => {
-          imagenes[i] = img;
-          if (!ultimoValido) ultimoValido = img;
-          alTerminar();
-        }).catch(() => {
-          img.onload = () => {
+        // decode() puede rechazar aunque la imagen ya haya cargado: si se espera
+        // onload recién en el catch, ese evento ya pasó y el cargador queda colgado.
+        img.decode().catch(() => (img.complete && img.naturalWidth ? null : Promise.reject()))
+          .then(() => {
             imagenes[i] = img;
             if (!ultimoValido) ultimoValido = img;
-            alTerminar();
-          };
-          img.onerror = () => {
-            alTerminar();
-          };
-        });
+          })
+          .catch(() => {})
+          .finally(alTerminar);
       }
     });
 
