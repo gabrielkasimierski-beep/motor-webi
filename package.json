@@ -8,5 +8,8 @@
     "cuadros": "node herramientas/video-a-cuadros.js",
     "nuevo-sitio": "node herramientas/nuevo-sitio.js",
     "archivos": "node herramientas/archivos-del-sitio.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.64.1"
   }
 }
