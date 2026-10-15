@@ -1,0 +1,256 @@
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;800&family=Instrument+Sans:wght@400;600&display=swap');
+
+:root {
+  --f-titulo: "Bricolage Grotesque", system-ui, sans-serif;
+  --f-texto: "Instrument Sans", system-ui, sans-serif;
+  --acento: #42e685;
+  --acento-claro: #98f7be;
+}
+
+body {
+  margin: 0;
+  background-color: #060c09;
+  color: #eef3ec;
+  font-family: var(--f-texto);
+  overflow-x: hidden;
+  user-select: none;
+}
+
+/* Cargador */
+.cargador {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background-color: #050a08;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.cargador.oculto {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.cargador-contenido {
+  text-align: center;
+  width: 100%;
+  max-width: 360px;
+  padding: 2rem;
+}
+
+.cargador-titulo {
+  font-family: var(--f-titulo);
+  font-size: clamp(1.8rem, 4vw, 2.5rem);
+  font-weight: 800;
+  margin: 0.8rem 0 1.5rem;
+  letter-spacing: -0.02em;
+}
+
+.barra-progreso {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progreso-linea {
+  width: 0%;
+  height: 100%;
+  background: var(--acento);
+  transition: width 0.1s linear;
+}
+
+.progreso-texto {
+  font-family: var(--f-mono, monospace);
+  font-size: 0.95rem;
+  color: var(--bruma, #a3b0a8);
+  margin-top: 0.8rem;
+  font-weight: 600;
+}
+
+/* Escenario y escena */
+.escenario {
+  position: relative;
+}
+
+.escena {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100svh;
+  width: 100%;
+  overflow: hidden;
+  background-color: #08100c;
+}
+
+/* Canvases */
+.canvas-capa {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+/* Gorila contenedor */
+.contenedor-gorila {
+  position: absolute;
+  top: 0;
+  left: 58%;
+  width: 100vw;
+  height: 100vh;
+  transform: translate(-50%, 0) scale(1);
+  transform-origin: top center;
+  pointer-events: none;
+  will-change: transform, filter, opacity;
+  transition: filter 0.2s ease, opacity 0.25s ease;
+}
+
+/* Sombra de piso al aterrizar */
+.sombra-piso {
+  position: absolute;
+  bottom: 8.5%;
+  left: 50%;
+  width: 450px;
+  max-width: 80vw;
+  height: 50px;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0) 75%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+.sombra-piso.visible {
+  opacity: 1;
+}
+
+/* Atmósfera: Neblina, Viñeteado, Follaje */
+.neblina {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 30%, rgba(20, 45, 30, 0.1) 0%, rgba(5, 10, 8, 0.4) 80%);
+  pointer-events: none;
+}
+
+.vinieta {
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 0 140px rgba(0, 0, 0, 0.75);
+  transition: box-shadow 0.3s ease;
+  pointer-events: none;
+}
+
+.vinieta.cerrada {
+  box-shadow: inset 0 0 280px rgba(0, 0, 0, 0.98);
+}
+
+.follaje-piso {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 30vh;
+  background: linear-gradient(to top, rgba(2, 6, 4, 0.96) 0%, rgba(2, 6, 4, 0.6) 45%, rgba(2, 6, 4, 0) 100%);
+  pointer-events: none;
+}
+
+/* Textos Narrativa en Columna Lateral Desktop */
+.textos-capa {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.columna-textos {
+  position: absolute;
+  top: 50%;
+  left: 8vw;
+  transform: translateY(-50%);
+  width: 32vw;
+  max-width: 460px;
+  min-width: 280px;
+}
+
+.texto-tramo {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%) translateX(-20px);
+  opacity: 0;
+  transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1), transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  text-align: left;
+}
+
+.texto-tramo.visible {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}
+
+.texto-tramo h2 {
+  margin-top: 0.4rem;
+  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.9);
+}
+
+/* Adaptación Celular (<900px) */
+@media (max-width: 899px) {
+  .contenedor-gorila {
+    left: 50%;
+  }
+
+  .columna-textos {
+    top: auto;
+    bottom: 8vh;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90vw;
+    max-width: none;
+    text-align: center;
+  }
+
+  .texto-tramo {
+    top: auto;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%) translateY(15px);
+    text-align: center;
+    width: 100%;
+  }
+
+  .texto-tramo.visible {
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Temblor de cámara */
+@keyframes temblorCamara {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  20% { transform: translate(-4px, 3px) rotate(-0.5deg); }
+  40% { transform: translate(5px, -3px) rotate(0.5deg); }
+  60% { transform: translate(-3px, 4px) rotate(-0.3deg); }
+  80% { transform: translate(4px, 2px) rotate(0.4deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+.escena.temblor {
+  animation: temblorCamara 0.12s infinite;
+}
+
+/* Reducir movimiento */
+@media (prefers-reduced-motion: reduce) {
+  .escena.temblor {
+    animation: none !important;
+  }
+  .texto-tramo {
+    transition: opacity 0.01ms !important;
+  }
+  .contenedor-gorila {
+    transition: none !important;
+  }
+}
