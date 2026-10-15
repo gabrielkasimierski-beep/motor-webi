@@ -1,0 +1,1186 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plenamente Humanos — Comunidad y Meditación con Mate</title>
+<meta name="description" content="Espacio de encuentro, comunidad, meditaciones y reflexiones semanales guiadas por Mate.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Instrument+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="./kit/tokens.css">
+<link rel="stylesheet" href="./kit/secciones.css">
+<link rel="stylesheet" href="./kit/pantalla.css">
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"
+  }
+}
+</script>
+
+<style>
+  /* Estilos específicos de la experiencia Plenamente Humanos */
+  .cabecera {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    padding: 1rem 0;
+    background: color-mix(in srgb, var(--tinta) 75%, transparent);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--linea);
+    transition: background var(--d-corta);
+  }
+  .cabecera .contenedor {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .logo-marca {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-family: var(--f-titulo);
+    font-weight: 800;
+    font-size: 1.25rem;
+    color: var(--hueso);
+  }
+  .logo-icono {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, var(--acento-claro), var(--acento-hondo));
+    box-shadow: 0 0 12px var(--acento);
+  }
+  .nav-menu {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+  }
+  .nav-menu a {
+    font-size: 0.9375rem;
+    color: var(--bruma);
+    transition: color var(--d-corta);
+  }
+  .nav-menu a:hover {
+    color: var(--hueso);
+  }
+
+  /* Hero con Escena 3D */
+  .hero-3d {
+    min-height: 120vh;
+    display: grid;
+    align-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .escena-zafus-contenedor {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: auto;
+  }
+  .hero-contenido {
+    position: relative;
+    z-index: 2;
+    pointer-events: none;
+    max-width: 42rem;
+    margin-block: 4rem;
+  }
+  .hero-contenido * {
+    pointer-events: auto;
+  }
+  .badge-comunidad {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.9rem;
+    border-radius: var(--r-pastilla);
+    background: color-mix(in srgb, var(--superficie) 80%, transparent);
+    border: 1px solid var(--linea-fuerte);
+    backdrop-filter: blur(8px);
+    margin-bottom: 1.5rem;
+    font-size: var(--t-nota);
+    color: var(--acento-claro);
+  }
+  .punto-vivo {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--acento);
+    box-shadow: 0 0 8px var(--acento);
+    animation: pulso 2s infinite;
+  }
+  @keyframes pulso {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.85); }
+  }
+
+  /* Widget de usuario 3D flotante */
+  .zafu-tooltip {
+    position: fixed;
+    z-index: 90;
+    padding: 0.5rem 0.9rem;
+    background: var(--superficie);
+    border: 1px solid var(--acento);
+    border-radius: var(--r-chico);
+    color: var(--hueso);
+    font-size: 0.8125rem;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    transform: translate(-50%, -120%);
+  }
+
+  /* Chat Interno */
+  .chat-contenedor {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 1.5rem;
+    background: var(--tinta-2);
+    border: 1px solid var(--linea);
+    border-radius: var(--r-grande);
+    overflow: hidden;
+  }
+  @media (max-width: 860px) {
+    .chat-contenedor {
+      grid-template-columns: 1fr;
+    }
+  }
+  .chat-principal {
+    display: flex;
+    flex-direction: column;
+    height: 520px;
+  }
+  .chat-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--linea);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--superficie);
+  }
+  .chat-mensajes {
+    flex: 1;
+    padding: 1.5rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+  .chat-mensaje {
+    display: flex;
+    gap: 0.85rem;
+    max-width: 85%;
+  }
+  .chat-mensaje.propio {
+    align-self: flex-end;
+    flex-direction: row-reverse;
+  }
+  .avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--superficie);
+    border: 1px solid var(--linea-fuerte);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--acento-claro);
+    flex-shrink: 0;
+  }
+  .avatar.mate {
+    background: var(--acento-hondo);
+    color: #fff;
+    border-color: var(--acento);
+  }
+  .burbuja {
+    padding: 0.85rem 1.1rem;
+    border-radius: var(--r-medio);
+    background: var(--superficie);
+    border: 1px solid var(--linea);
+    font-size: 0.9375rem;
+    line-height: 1.45;
+  }
+  .chat-mensaje.propio .burbuja {
+    background: color-mix(in srgb, var(--acento-hondo) 35%, var(--superficie));
+    border-color: color-mix(in srgb, var(--acento) 40%, transparent);
+  }
+  .autor-info {
+    display: flex;
+    gap: 0.5rem;
+    align-items: baseline;
+    margin-bottom: 0.25rem;
+    font-size: 0.75rem;
+    color: var(--bruma);
+  }
+  .autor-nombre {
+    font-weight: 600;
+    color: var(--hueso);
+  }
+  .chat-input-area {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--linea);
+    background: var(--superficie);
+    display: flex;
+    gap: 0.75rem;
+  }
+  .chat-input {
+    flex: 1;
+    background: var(--tinta-2);
+    border: 1px solid var(--linea);
+    border-radius: var(--r-pastilla);
+    padding: 0.7rem 1.2rem;
+    color: var(--hueso);
+    outline: none;
+  }
+  .chat-input:focus {
+    border-color: var(--acento);
+  }
+  .chat-sidebar {
+    padding: 1.5rem;
+    border-left: 1px solid var(--linea);
+    background: color-mix(in srgb, var(--superficie) 50%, var(--tinta-2));
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  .lista-usuarios {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .item-usuario {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.875rem;
+  }
+
+  /* Grid de videos de Mate */
+  .grid-videos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.75rem;
+    margin-top: 2rem;
+  }
+  .tarjeta-video-mate {
+    border: 1px solid var(--linea);
+    border-radius: var(--r-medio);
+    background: var(--tinta-2);
+    overflow: hidden;
+    transition: transform var(--d-corta) var(--curva-salida), border-color var(--d-corta);
+  }
+  .tarjeta-video-mate:hover {
+    transform: translateY(-4px);
+    border-color: var(--acento);
+  }
+  .miniatura-video {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    background: var(--superficie);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .miniatura-video img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.8;
+  }
+  .boton-play {
+    position: absolute;
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--acento) 85%, black);
+    color: var(--sobre-acento);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    transition: transform var(--d-corta);
+  }
+  .tarjeta-video-mate:hover .boton-play {
+    transform: scale(1.1);
+  }
+  .info-video {
+    padding: 1.25rem;
+  }
+
+  /* Modals */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(12px);
+    display: grid;
+    place-items: center;
+    padding: 1.5rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--d-media);
+  }
+  .modal-overlay.activo {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .modal-contenido {
+    background: var(--tinta-2);
+    border: 1px solid var(--linea-fuerte);
+    border-radius: var(--r-grande);
+    max-width: 720px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 2rem;
+    position: relative;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.8);
+  }
+  .cerrar-modal {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: var(--superficie);
+    border: 1px solid var(--linea);
+    color: var(--hueso);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Section Newsletter & Articles */
+  .grid-articulos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 1.75rem;
+    margin-top: 2rem;
+  }
+  .tarjeta-articulo {
+    padding: 1.75rem;
+    border: 1px solid var(--linea);
+    border-radius: var(--r-medio);
+    background: var(--tinta-2);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 1.25rem;
+    transition: border-color var(--d-corta);
+  }
+  .tarjeta-articulo:hover {
+    border-color: var(--acento);
+  }
+
+  /* Form Newsletter */
+  .caja-newsletter {
+    margin-top: 3rem;
+    padding: 2.5rem;
+    border-radius: var(--r-grande);
+    background: linear-gradient(135deg, var(--superficie), var(--tinta-2));
+    border: 1px solid var(--linea-fuerte);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    align-items: center;
+  }
+  @media (max-width: 768px) {
+    .caja-newsletter {
+      grid-template-columns: 1fr;
+    }
+  }
+  .newsletter-form {
+    display: flex;
+    gap: 0.75rem;
+  }
+
+  /* Proxima Jornada */
+  .tarjeta-jornada {
+    padding: 3rem;
+    border-radius: var(--r-grande);
+    background: radial-gradient(circle at top right, color-mix(in srgb, var(--acento) 15%, transparent), transparent 60%), var(--tinta-2);
+    border: 1px solid var(--acento);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 2rem;
+    align-items: center;
+  }
+  @media (max-width: 768px) {
+    .tarjeta-jornada {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .detalles-jornada {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+  }
+  .item-detalle {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.9375rem;
+    color: var(--bruma);
+  }
+</style>
+</head>
+<body>
+
+<!-- Tooltip para interactuar con zafus 3D -->
+<div id="zafuTooltip" class="zafu-tooltip">
+  <div id="zafuNombre" style="font-weight: 700; color: var(--acento-claro);"></div>
+  <div id="zafuEstado" style="font-size: 0.75rem; color: var(--bruma);"></div>
+</div>
+
+<!-- Navigation Header -->
+<header class="cabecera">
+  <div class="contenedor">
+    <a href="#" class="logo-marca">
+      <div class="logo-icono"></div>
+      <span>Plenamente Humanos</span>
+    </a>
+    <nav class="nav-menu">
+      <a href="#comunidad">Comunidad</a>
+      <a href="#chat">Chat Interno</a>
+      <a href="#meditaciones">Meditaciones</a>
+      <a href="#newsletter">Reflexiones</a>
+      <a href="#jornadas" class="boton" style="padding: 0.5rem 1rem; font-size: 0.85rem;">Próxima Jornada</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- Hero Section with 3D Zafus Orbiting Scene -->
+  <section class="hero-3d banda resplandor grano" data-escenario>
+    <div id="escena3dZafus" class="escena-zafus-contenedor"></div>
+    <div class="contenedor">
+      <div class="hero-contenido" data-aparecer>
+        <div class="badge-comunidad">
+          <span class="punto-vivo"></span>
+          <span>42 personas en órbita activa</span>
+        </div>
+        <h1 class="titulo-xl" style="margin-bottom: 1.25rem;">
+          Un espacio de quietud, comunidad y presencia.
+        </h1>
+        <p class="bajada" style="font-size: 1.15rem; margin-bottom: 2rem;">
+          Acompañados por Mate en jornadas de meditación, diálogos sinceros y un chat interno vivo para reencontrarnos con lo esencial.
+        </p>
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+          <a href="#chat" class="boton">Entrar al Chat Interno</a>
+          <a href="#meditaciones" class="boton boton--fantasma">Ver Meditaciones</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Presentación de la Comunidad -->
+  <section id="comunidad" class="banda">
+    <div class="contenedor">
+      <div style="max-width: 38rem; margin-bottom: 3rem;">
+        <p class="etiqueta" data-aparecer>Sobre la experiencia</p>
+        <h2 class="titulo-l" data-aparecer style="margin-block: 0.5rem 1rem;">
+          Un refugio para pausar y respirar juntos
+        </h2>
+        <p class="bajada" data-aparecer>
+          Cada sábado por medio nos reunimos en jornadas de meditación profunda guiadas por Mate. Este portal es el lugar donde la comunidad sigue en contacto durante la semana.
+        </p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+        <div class="tarjeta" style="padding: 2rem;" data-aparecer>
+          <div style="font-size: 2rem; color: var(--acento); margin-bottom: 0.75rem;">🧘‍♂️</div>
+          <h3 class="titulo-m" style="margin-bottom: 0.5rem; font-size: 1.25rem;">Jornadas de Sábado</h3>
+          <p class="bajada" style="font-size: 0.9375rem;">Encuentros presenciales y en directo para practicar la presencia consciente, el silencio y la indagación espiritual.</p>
+        </div>
+        <div class="tarjeta" style="padding: 2rem;" data-aparecer>
+          <div style="font-size: 2rem; color: var(--acento); margin-bottom: 0.75rem;">💬</div>
+          <h3 class="titulo-m" style="margin-bottom: 0.5rem; font-size: 1.25rem;">Comunidad e Intercambio</h3>
+          <p class="bajada" style="font-size: 0.9375rem;">Un chat interno reservado donde compartir preguntas, descubrimientos cotidianos y contención mutua.</p>
+        </div>
+        <div class="tarjeta" style="padding: 2rem;" data-aparecer>
+          <div style="font-size: 2rem; color: var(--acento); margin-bottom: 0.75rem;">📜</div>
+          <h3 class="titulo-m" style="margin-bottom: 0.5rem; font-size: 1.25rem;">Reflexiones de Mate</h3>
+          <p class="bajada" style="font-size: 0.9375rem;">Cartas y escritos dos veces por semana directo a tu correo y guardados en la biblioteca abierta.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Chat Interno de la Comunidad -->
+  <section id="chat" class="banda" style="background: color-mix(in srgb, var(--superficie) 30%, var(--tinta));">
+    <div class="contenedor">
+      <div style="margin-bottom: 2.5rem;">
+        <p class="etiqueta" data-aparecer>Punto de encuentro</p>
+        <h2 class="titulo-l" data-aparecer style="margin-top: 0.5rem;">
+          Chat Interno Plenamente Humanos
+        </h2>
+        <p class="bajada" data-aparecer>
+          El espacio de resonancia posterior a cada jornada de meditación.
+        </p>
+      </div>
+
+      <div class="chat-contenedor" data-aparecer>
+        <div class="chat-principal">
+          <div class="chat-header">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <span class="punto-vivo"></span>
+              <div>
+                <strong style="display: block; font-size: 0.9375rem;">Círculo General de Meditación</strong>
+                <span class="nota">18 miembros activos en este momento</span>
+              </div>
+            </div>
+            <span class="pastilla">Comunidad Abierta</span>
+          </div>
+
+          <div id="chatMensajes" class="chat-mensajes">
+            <!-- Mensaje 1: Mate -->
+            <div class="chat-mensaje">
+              <div class="avatar mate">M</div>
+              <div>
+                <div class="autor-info">
+                  <span class="autor-nombre">Mate</span>
+                  <span>10:14 AM</span>
+                </div>
+                <div class="burbuja">
+                  Buen día a todos. En la práctica del sábado pasado tocamos la observación del pensamiento sin juzgar. ¿Cómo resonó esa quietud en su semana?
+                </div>
+              </div>
+            </div>
+
+            <!-- Mensaje 2: Sofía -->
+            <div class="chat-mensaje">
+              <div class="avatar">S</div>
+              <div>
+                <div class="autor-info">
+                  <span class="autor-nombre">Sofía R.</span>
+                  <span>10:18 AM</span>
+                </div>
+                <div class="burbuja">
+                  Gracias Mate. Me sirvió muchísimo en el trabajo. Ante el apuro me acordé de volver al zafu y tomar tres respiraciones lentas.
+                </div>
+              </div>
+            </div>
+
+            <!-- Mensaje 3: Nico -->
+            <div class="chat-mensaje">
+              <div class="avatar">N</div>
+              <div>
+                <div class="autor-info">
+                  <span class="autor-nombre">Nicolás</span>
+                  <span>10:25 AM</span>
+                </div>
+                <div class="burbuja">
+                  Siento que la rueda del hábito a veces quiere volver, pero el espacio del grupo da mucha fuerza para sostener la atención.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <form id="chatForm" class="chat-input-area">
+            <input type="text" id="chatInput" class="chat-input" placeholder="Escribí un mensaje o reflexión para la comunidad..." required>
+            <button type="submit" class="boton" style="padding: 0.7rem 1.4rem;">Enviar</button>
+          </form>
+        </div>
+
+        <div class="chat-sidebar">
+          <h4 style="margin: 0; font-size: 0.9375rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--bruma);">Miembros en el Círculo</h4>
+          <div class="lista-usuarios">
+            <div class="item-usuario">
+              <div class="avatar mate" style="width: 28px; height: 28px; font-size: 0.75rem;">M</div>
+              <div>
+                <strong style="display: block; font-size: 0.85rem;">Mate</strong>
+                <span style="font-size: 0.7rem; color: var(--acento-claro);">Guía / Mentor</span>
+              </div>
+            </div>
+            <div class="item-usuario">
+              <div class="avatar" style="width: 28px; height: 28px; font-size: 0.75rem;">S</div>
+              <span>Sofía R.</span>
+            </div>
+            <div class="item-usuario">
+              <div class="avatar" style="width: 28px; height: 28px; font-size: 0.75rem;">N</div>
+              <span>Nicolás</span>
+            </div>
+            <div class="item-usuario">
+              <div class="avatar" style="width: 28px; height: 28px; font-size: 0.75rem;">V</div>
+              <span>Valentina M.</span>
+            </div>
+            <div class="item-usuario">
+              <div class="avatar" style="width: 28px; height: 28px; font-size: 0.75rem;">L</div>
+              <span>Lucía B.</span>
+            </div>
+          </div>
+          <div style="margin-top: auto; padding: 1rem; border-radius: var(--r-medio); background: var(--tinta-2); border: 1px solid var(--linea);">
+            <p class="nota" style="margin: 0;">
+              💡 <strong>Regla del Círculo:</strong> Espacio de escucha atenta, respeto y silencio compartido.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Biblioteca de Meditaciones y Videos de Mate -->
+  <section id="meditaciones" class="banda">
+    <div class="contenedor">
+      <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <p class="etiqueta" data-aparecer>Contenido audiovisual</p>
+          <h2 class="titulo-l" data-aparecer style="margin-top: 0.5rem;">
+            Meditaciones y Videos de Mate
+          </h2>
+          <p class="bajada" data-aparecer>
+            Sesiones grabadas y guías prácticas para acompañar tu sentado diario.
+          </p>
+        </div>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          <button class="pastilla es-activa">Todas</button>
+          <button class="pastilla">Guiadas</button>
+          <button class="pastilla">Jornadas Grabadas</button>
+          <button class="pastilla">Respuestas</button>
+        </div>
+      </div>
+
+      <div class="grid-videos">
+        <!-- Video 1 -->
+        <article class="tarjeta-video-mate" data-aparecer>
+          <div class="miniatura-video">
+            <svg width="100%" height="100%" viewBox="0 0 400 225" style="background: linear-gradient(135deg, #2a1f18, #14100c);">
+              <circle cx="200" cy="112" r="60" fill="var(--acento-hondo)" opacity="0.3" />
+              <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="var(--hueso)" font-family="sans-serif" font-size="14" opacity="0.6">
+                [Grabación Jornada Sábado]
+              </text>
+            </svg>
+            <button class="boton-play" aria-label="Reproducir video" onclick="abrirVideoModal('Meditación de la Presencia Consciente', 'https://www.youtube.com/embed/dQw4w9WgXcQ')">
+              ▶
+            </button>
+          </div>
+          <div class="info-video">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+              <span class="etiqueta">35 MIN</span>
+              <span class="nota">Sábado Pasado</span>
+            </div>
+            <h3 class="titulo-m" style="font-size: 1.15rem; margin-bottom: 0.5rem;">
+              Meditación de la Presencia Consciente
+            </h3>
+            <p class="bajada" style="font-size: 0.875rem;">
+              Práctica completa de quietud corporal y apertura de los sentidos compartida en el último encuentro de la comunidad.
+            </p>
+          </div>
+        </article>
+
+        <!-- Video 2 -->
+        <article class="tarjeta-video-mate" data-aparecer>
+          <div class="miniatura-video">
+            <svg width="100%" height="100%" viewBox="0 0 400 225" style="background: linear-gradient(135deg, #1c2621, #101814);">
+              <circle cx="200" cy="112" r="50" fill="#12995a" opacity="0.25" />
+              <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="var(--hueso)" font-family="sans-serif" font-size="14" opacity="0.6">
+                [Respiración Guiada]
+              </text>
+            </svg>
+            <button class="boton-play" aria-label="Reproducir video" onclick="abrirVideoModal('Respirar en la Tormenta', 'https://www.youtube.com/embed/dQw4w9WgXcQ')">
+              ▶
+            </button>
+          </div>
+          <div class="info-video">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+              <span class="etiqueta">18 MIN</span>
+              <span class="nota">Guía Diaria</span>
+            </div>
+            <h3 class="titulo-m" style="font-size: 1.15rem; margin-bottom: 0.5rem;">
+              Respirar en la Tormenta
+            </h3>
+            <p class="bajada" style="font-size: 0.875rem;">
+              Una guía breve para volver al eje cuando el entorno o los pensamientos se vuelven vertiginosos.
+            </p>
+          </div>
+        </article>
+
+        <!-- Video 3 -->
+        <article class="tarjeta-video-mate" data-aparecer>
+          <div class="miniatura-video">
+            <svg width="100%" height="100%" viewBox="0 0 400 225" style="background: linear-gradient(135deg, #2b2218, #18130d);">
+              <circle cx="200" cy="112" r="70" fill="var(--acento)" opacity="0.2" />
+              <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="var(--hueso)" font-family="sans-serif" font-size="14" opacity="0.6">
+                [Charla & Diálogo]
+              </text>
+            </svg>
+            <button class="boton-play" aria-label="Reproducir video" onclick="abrirVideoModal('La Ilusión del Control', 'https://www.youtube.com/embed/dQw4w9WgXcQ')">
+              ▶
+            </button>
+          </div>
+          <div class="info-video">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+              <span class="etiqueta">42 MIN</span>
+              <span class="nota">Diálogo Abierto</span>
+            </div>
+            <h3 class="titulo-m" style="font-size: 1.15rem; margin-bottom: 0.5rem;">
+              La Ilusión del Control y el Arte de Soltar
+            </h3>
+            <p class="bajada" style="font-size: 0.875rem;">
+              Mate responde preguntas de los participantes sobre el apego a las expectativas y la aceptación activa.
+            </p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Newsletter y Escritos de Mate -->
+  <section id="newsletter" class="banda" style="background: color-mix(in srgb, var(--superficie) 20%, var(--tinta));">
+    <div class="contenedor">
+      <div>
+        <p class="etiqueta" data-aparecer>Escritos semanales</p>
+        <h2 class="titulo-l" data-aparecer style="margin-top: 0.5rem;">
+          Newsletter de Mate: Cartas desde el Zafu
+        </h2>
+        <p class="bajada" data-aparecer>
+          Dos veces por semana, Mate envía una reflexión escrita a la comunidad. Leelas acá o recibilas directamente en tu casilla.
+        </p>
+      </div>
+
+      <div class="grid-articulos">
+        <!-- Articulo 1 -->
+        <article class="tarjeta-articulo" data-aparecer>
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+              <span class="etiqueta">Edición #104</span>
+              <span class="nota">Hace 2 días</span>
+            </div>
+            <h3 class="titulo-m" style="font-size: 1.25rem; margin-bottom: 0.75rem;">
+              El espacio entre dos pensamientos
+            </h3>
+            <p class="bajada" style="font-size: 0.9375rem;">
+              No somos la voz que habla en la cabeza; somos la conciencia serena que escucha esa voz pasar como una nube en el cielo abierto...
+            </p>
+          </div>
+          <button class="boton boton--fantasma" style="width: 100%;" onclick="abrirLecturaModal('El espacio entre dos pensamientos', 'No somos la voz que habla en la cabeza; somos la conciencia serena que escucha esa voz pasar como una nube en el cielo abierto.\n\nCuando nos sentamos en el zafu, la propuesta no es luchar contra el pensamiento ni forzar una mente en blanco. La verdadera meditación empieza cuando dejamos de identificarnos con la narrativa y descansamos en el espacio entre pensamiento y pensamiento.\n\nEn esa pequeña pausa habita la plenitud.')">
+            Leer escrito completo
+          </button>
+        </article>
+
+        <!-- Articulo 2 -->
+        <article class="tarjeta-articulo" data-aparecer>
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+              <span class="etiqueta">Edición #103</span>
+              <span class="nota">Hace 5 días</span>
+            </div>
+            <h3 class="titulo-m" style="font-size: 1.25rem; margin-bottom: 0.75rem;">
+              Habitar el cuerpo en el apuro cotidiano
+            </h3>
+            <p class="bajada" style="font-size: 0.9375rem;">
+              ¿Dónde están tus hombros mientras lees esto? ¿Cómo se siente la planta de tus pies tocando el suelo? Volver al cuerpo es volver a casa...
+            </p>
+          </div>
+          <button class="boton boton--fantasma" style="width: 100%;" onclick="abrirLecturaModal('Habitar el cuerpo en el apuro cotidiano', '¿Dónde están tus hombros mientras lees esto? ¿Cómo se siente la planta de tus pies tocando el suelo?\n\nLa aceleración de nuestra rutina moderna nos desconecta del vehículo principal de nuestra experiencia: el cuerpo. Volver a sentir el peso de los pies, la temperatura de las manos y el ritmo suave de la respiración es el ancla más inmediata para desarmar la ansiedad.')">
+            Leer escrito completo
+          </button>
+        </article>
+
+        <!-- Articulo 3 -->
+        <article class="tarjeta-articulo" data-aparecer>
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+              <span class="etiqueta">Edición #102</span>
+              <span class="nota">Hace 1 semana</span>
+            </div>
+            <h3 class="titulo-m" style="font-size: 1.25rem; margin-bottom: 0.75rem;">
+              La valentía de la vulnerabilidad en grupo
+            </h3>
+            <p class="bajada" style="font-size: 0.9375rem;">
+              Sostener una pose ante los demás agota. En la comunidad Plenamente Humanos nos sacamos las armaduras para encontrarnos de verdad...
+            </p>
+          </div>
+          <button class="boton boton--fantasma" style="width: 100%;" onclick="abrirLecturaModal('La valentía de la vulnerabilidad en grupo', 'Sostener una pose ante los demás agota. Cuando llegamos a la jornada del sábado y nos sentamos en círculo, descubrimos que las mismas dudas y temores que creíamos individuales son compartidos por todos.\n\nEn la comunidad de Plenamente Humanos cultivamos la valentía de mostrarnos reales. De allí nace la verdadera conexión.')">
+            Leer escrito completo
+          </button>
+        </article>
+      </div>
+
+      <!-- Formulario de suscripción -->
+      <div class="caja-newsletter" data-aparecer>
+        <div>
+          <span class="etiqueta" style="color: var(--acento-claro);">Suscripción al Newsletter</span>
+          <h3 class="titulo-m" style="margin-block: 0.5rem; font-size: 1.5rem;">
+            Recibí las cartas de Mate (2 veces por semana)
+          </h3>
+          <p class="bajada" style="font-size: 0.9375rem;">
+            Sin spam, solo reflexiones para acompañar tu camino y avisos de nuevas jornadas.
+          </p>
+        </div>
+        <form id="newsletterForm" class="newsletter-form">
+          <input type="email" placeholder="Tu correo electrónico..." required class="chat-input" style="border-radius: var(--r-pastilla);">
+          <button type="submit" class="boton" style="white-space: nowrap;">Suscribirme</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- Próxima Jornada del Sábado -->
+  <section id="jornadas" class="banda">
+    <div class="contenedor">
+      <div class="tarjeta-jornada" data-aparecer>
+        <div>
+          <div class="badge-comunidad" style="margin-bottom: 1rem; background: color-mix(in srgb, var(--acento-hondo) 30%, transparent);">
+            <span class="punto-vivo"></span>
+            <span>Próximo encuentro presencial y online</span>
+          </div>
+          <h2 class="titulo-l" style="margin-bottom: 0.75rem;">
+            Jornada de Meditación y Silencio
+          </h2>
+          <p class="bajada" style="font-size: 1.05rem;">
+            Un espacio inmersivo de cuatro horas para profundizar en la meditación, compartir la palabra con Mate y disfrutar del almuerzo consciente en comunidad.
+          </p>
+
+          <div class="detalles-jornada">
+            <div class="item-detalle">
+              <span>📅</span>
+              <strong style="color: var(--hueso);">Sábado 24 de Octubre</strong>
+            </div>
+            <div class="item-detalle">
+              <span>⏰</span>
+              <strong style="color: var(--hueso);">10:00 a 14:00 hs</strong>
+            </div>
+            <div class="item-detalle">
+              <span>📍</span>
+              <strong style="color: var(--hueso);">Espacio Holístico / Zoom en vivo</strong>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <a href="https://wa.me/?text=Hola%20Mate,%20quiero%20reservar%20mi%20lugar%20para%20la%20pr%C3%B3xima%20jornada" target="_blank" class="boton" style="padding: 1.1rem 2rem; font-size: 1.1rem;">
+            Reservar mi lugar
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- Footer -->
+<footer style="padding-block: 4rem 2rem; border-top: 1px solid var(--linea); background: var(--tinta-2);">
+  <div class="contenedor">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 2rem; margin-bottom: 3rem;">
+      <a href="#" class="logo-marca">
+        <div class="logo-icono"></div>
+        <span>Plenamente Humanos</span>
+      </a>
+      <div style="display: flex; gap: 2rem; flex-wrap: wrap; font-size: 0.9375rem; color: var(--bruma);">
+        <a href="#comunidad">Comunidad</a>
+        <a href="#chat">Chat Interno</a>
+        <a href="#meditaciones">Meditaciones</a>
+        <a href="#newsletter">Newsletter</a>
+        <a href="#jornadas">Jornadas</a>
+      </div>
+    </div>
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; border-top: 1px solid var(--linea); padding-top: 2rem;" class="nota">
+      <p>© Plenamente Humanos — Guiado por Mate. Todos los derechos reservados.</p>
+      <p>Creado con Motor webi</p>
+    </div>
+  </div>
+</footer>
+
+<!-- Modal de Video -->
+<div id="videoModal" class="modal-overlay">
+  <div class="modal-contenido">
+    <button class="cerrar-modal" onclick="cerrarVideoModal()">✕</button>
+    <h3 id="videoModalTitulo" class="titulo-m" style="margin-bottom: 1.5rem;"></h3>
+    <div style="aspect-ratio: 16 / 9; background: #000; border-radius: var(--r-medio); overflow: hidden;">
+      <iframe id="videoModalIframe" width="100%" height="100%" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Lectura de Newsletter -->
+<div id="lecturaModal" class="modal-overlay">
+  <div class="modal-contenido">
+    <button class="cerrar-modal" onclick="cerrarLecturaModal()">✕</button>
+    <span class="etiqueta" style="margin-bottom: 0.5rem; display: block;">Escrito por Mate</span>
+    <h2 id="lecturaModalTitulo" class="titulo-l" style="margin-bottom: 1.5rem;"></h2>
+    <div id="lecturaModalCuerpo" class="bajada" style="white-space: pre-line; max-width: 100%; font-size: 1.05rem; line-height: 1.7; color: var(--hueso);"></div>
+  </div>
+</div>
+
+<!-- Lógica del sitio & 3D Zafus orbitales -->
+<script type="module">
+  import { aparecer } from "./kit/motor-scroll.js";
+  import { escena3d } from "./kit/escena3d.js";
+
+  // Inicializar animaciones de scroll
+  aparecer();
+
+  /* ----------------------------------------------------
+     3D Signature Piece: Zafus de Átomos en Movimiento
+     Cada zafu representa a un integrante de la comunidad
+  ---------------------------------------------------- */
+  const contenedor3d = document.getElementById("escena3dZafus");
+  const tooltip = document.getElementById("zafuTooltip");
+  const nombreTooltip = document.getElementById("zafuNombre");
+  const estadoTooltip = document.getElementById("zafuEstado");
+
+  const usuariosZafu = [
+    { nombre: "Mate", rol: "Mentor / Guía espiritual", color: 0xd97746, radioOrbita: 0, velocidad: 0, z: 0 },
+    { nombre: "Sofía R.", rol: "Miembro activo", color: 0xf1a982, radioOrbita: 2.2, velocidad: 0.4, z: 0.4 },
+    { nombre: "Nicolás", rol: "Miembro activo", color: 0xbeaba0, radioOrbita: 2.2, velocidad: -0.5, z: -0.3 },
+    { nombre: "Valentina M.", rol: "Miembro activo", color: 0xf1a982, radioOrbita: 3.5, velocidad: 0.3, z: 0.2 },
+    { nombre: "Martín", rol: "Miembro activo", color: 0xbeaba0, radioOrbita: 3.5, velocidad: -0.35, z: -0.5 },
+    { nombre: "Lucía B.", rol: "Miembro activo", color: 0xf1a982, radioOrbita: 4.8, velocidad: 0.2, z: 0.6 },
+    { nombre: "Tú", rol: "Conectado ahora", color: 0xd97746, radioOrbita: 4.8, velocidad: -0.25, z: -0.2 },
+  ];
+
+  if (contenedor3d) {
+    escena3d(contenedor3d, async ({ THREE, escena, camara, render }) => {
+      // Luces serenas
+      const luzAmbiental = new THREE.AmbientLight(0xfff5ea, 0.8);
+      escena.add(luzAmbiental);
+
+      const luzSol = new THREE.DirectionalLight(0xf1a982, 2.5);
+      luzSol.position.set(5, 8, 6);
+      escena.add(luzSol);
+
+      const luzContraluz = new THREE.DirectionalLight(0xd97746, 1.8);
+      luzContraluz.position.set(-5, -2, -4);
+      escena.add(luzContraluz);
+
+      // Crear geometrías procedurales para los Zafus (Cojines de meditación abombados)
+      const zafusGrupo = new THREE.Group();
+      escena.add(zafusGrupo);
+
+      const mallasZafus = [];
+
+      usuariosZafu.forEach((usr, idx) => {
+        // Geometría del zafu: un cilindro achatado con bordes suaves o toroid/sphere escalada
+        const radioZafu = usr.nombre === "Mate" ? 0.7 : 0.45;
+        const geoZafu = new THREE.CylinderGeometry(radioZafu, radioZafu * 1.1, radioZafu * 0.7, 32);
+
+        // Material suave al tacto (estilo tela orgánica / lino)
+        const matZafu = new THREE.MeshStandardMaterial({
+          color: usr.color,
+          roughness: 0.7,
+          metalness: 0.1,
+        });
+
+        const mZafu = new THREE.Mesh(geoZafu, matZafu);
+
+        // Pliegues decorativos / Botón central del zafu
+        const geoBoton = new THREE.CylinderGeometry(radioZafu * 0.2, radioZafu * 0.2, radioZafu * 0.75, 16);
+        const matBoton = new THREE.MeshStandardMaterial({ color: 0x1c1815, roughness: 0.9 });
+        const mBoton = new THREE.Mesh(geoBoton, matBoton);
+        mZafu.add(mBoton);
+
+        mZafu.userData = { usuario: usr, anguloInicial: (idx * Math.PI * 2) / usuariosZafu.length };
+        zafusGrupo.add(mZafu);
+        mallasZafus.push(mZafu);
+      });
+
+      // Anillos de órbita atómica decorativos
+      [2.2, 3.5, 4.8].forEach((r, i) => {
+        const geoAnillo = new THREE.RingGeometry(r - 0.015, r + 0.015, 64);
+        const matAnillo = new THREE.MeshBasicMaterial({
+          color: 0xf1a982,
+          side: THREE.DoubleSide,
+          transparent: true,
+          opacity: 0.15 - i * 0.03,
+        });
+        const anillo = new THREE.Mesh(geoAnillo, matAnillo);
+        anillo.rotation.x = Math.PI / 2.3 + (i * 0.2);
+        anillo.rotation.y = i * 0.3;
+        escena.add(anillo);
+      });
+
+      // Partículas flotantes de luz (atmósfera)
+      const cantidadParticulas = 300;
+      const geoPart = new THREE.BufferGeometry();
+      const posPart = new Float32Array(cantidadParticulas * 3);
+      for (let i = 0; i < cantidadParticulas * 3; i += 3) {
+        posPart[i] = (Math.random() - 0.5) * 16;
+        posPart[i + 1] = (Math.random() - 0.5) * 12;
+        posPart[i + 2] = (Math.random() - 0.5) * 16;
+      }
+      geoPart.setAttribute("position", new THREE.BufferAttribute(posPart, 3));
+      const matPart = new THREE.PointsMaterial({
+        color: 0xf1a982,
+        size: 0.04,
+        transparent: true,
+        opacity: 0.4,
+      });
+      const nubePart = new THREE.Points(geoPart, matPart);
+      escena.add(nubePart);
+
+      // Posición de cámara inicial
+      camara.position.set(0, 2.5, 8);
+      camara.lookAt(0, 0, 0);
+
+      // Raycaster para interactuar con los zafus al mover el mouse
+      const raycaster = new THREE.Raycaster();
+      const mouse = new THREE.Vector2();
+
+      window.addEventListener("pointermove", (e) => {
+        const rect = contenedor3d.getBoundingClientRect();
+        mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+        raycaster.setFromCamera(mouse, camara);
+        const impactos = raycaster.intersectObjects(mallasZafus);
+
+        if (impactos.length > 0) {
+          const m = impactos[0].object;
+          const usr = m.userData.usuario || m.parent?.userData.usuario;
+          if (usr) {
+            tooltip.style.opacity = "1";
+            tooltip.style.left = `${e.clientX}px`;
+            tooltip.style.top = `${e.clientY}px`;
+            nombreTooltip.textContent = `${usr.nombre}`;
+            estadoTooltip.textContent = `${usr.rol}`;
+          }
+        } else {
+          tooltip.style.opacity = "0";
+        }
+      });
+
+      // Función de animación por cuadro
+      return {
+        cuadro(t, dt, p) {
+          // p es el progreso de scroll (0..1)
+          // Rotación lenta de todo el sistema
+          zafusGrupo.rotation.y = t * 0.1 + p * Math.PI;
+
+          // Animación orbital individual de cada zafu
+          mallasZafus.forEach((m) => {
+            const usr = m.userData.usuario;
+            if (usr.radioOrbita === 0) {
+              // Mate en el centro, flotando suavemente
+              m.position.set(0, Math.sin(t * 1.5) * 0.15, 0);
+              m.rotation.y = t * 0.2;
+            } else {
+              const ang = m.userData.anguloInicial + t * usr.velocidad * 0.3;
+              m.position.x = Math.cos(ang) * usr.radioOrbita;
+              m.position.z = Math.sin(ang) * usr.radioOrbita + usr.z;
+              m.position.y = Math.sin(t * 2 + usr.radioOrbita) * 0.2;
+              m.rotation.y = ang + t * 0.5;
+            }
+          });
+
+          // Animación suave de partículas
+          nubePart.rotation.y = t * 0.03;
+
+          // Cámara responde levemente al scroll desplazándose en z y altura
+          camara.position.y = 2.5 + p * 3;
+          camara.position.z = 8 - p * 2;
+          camara.lookAt(0, 0, 0);
+        }
+      };
+    }, { fov: 40 });
+  }
+
+  /* ----------------------------------------------------
+     Lógica del Chat Interno de la Comunidad
+  ---------------------------------------------------- */
+  const chatForm = document.getElementById("chatForm");
+  const chatInput = document.getElementById("chatInput");
+  const chatMensajes = document.getElementById("chatMensajes");
+
+  if (chatForm) {
+    chatForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const texto = chatInput.value.trim();
+      if (!texto) return;
+
+      const hora = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      const msgDiv = document.createElement("div");
+      msgDiv.className = "chat-mensaje propio";
+      msgDiv.innerHTML = `
+        <div class="avatar" style="background: var(--acento); color: var(--sobre-acento);">Tú</div>
+        <div>
+          <div class="autor-info" style="justify-content: flex-end;">
+            <span class="autor-nombre">Tú</span>
+            <span>${hora}</span>
+          </div>
+          <div class="burbuja">${escaparHTML(texto)}</div>
+        </div>
+      `;
+
+      chatMensajes.appendChild(msgDiv);
+      chatInput.value = "";
+      chatMensajes.scrollTop = chatMensajes.scrollHeight;
+
+      // Respuesta simulada de Mate después de 2.5 segundos
+      setTimeout(() => {
+        const mateDiv = document.createElement("div");
+        mateDiv.className = "chat-mensaje";
+        mateDiv.innerHTML = `
+          <div class="avatar mate">M</div>
+          <div>
+            <div class="autor-info">
+              <span class="autor-nombre">Mate</span>
+              <span>${hora}</span>
+            </div>
+            <div class="burbuja">Gracias por compartirlo con la comunidad. En la próxima jornada del sábado profundizamos ese sentir.</div>
+          </div>
+        `;
+        chatMensajes.appendChild(mateDiv);
+        chatMensajes.scrollTop = chatMensajes.scrollHeight;
+      }, 2500);
+    });
+  }
+
+  function escaparHTML(str) {
+    return str.replace(/[&<>'"]/g,
+      tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+    );
+  }
+
+  /* ----------------------------------------------------
+     Lógica de Modales de Video y Lectura de Newsletter
+  ---------------------------------------------------- */
+  window.abrirVideoModal = function(titulo, embedUrl) {
+    document.getElementById("videoModalTitulo").textContent = titulo;
+    document.getElementById("videoModalIframe").src = embedUrl;
+    document.getElementById("videoModal").classList.add("activo");
+  };
+
+  window.cerrarVideoModal = function() {
+    document.getElementById("videoModal").classList.remove("activo");
+    document.getElementById("videoModalIframe").src = "";
+  };
+
+  window.abrirLecturaModal = function(titulo, cuerpo) {
+    document.getElementById("lecturaModalTitulo").textContent = titulo;
+    document.getElementById("lecturaModalCuerpo").textContent = cuerpo;
+    document.getElementById("lecturaModal").classList.add("activo");
+  };
+
+  window.cerrarLecturaModal = function() {
+    document.getElementById("lecturaModal").classList.remove("activo");
+  };
+
+  // Newsletter submission form alert
+  const newsletterForm = document.getElementById("newsletterForm");
+  if (newsletterForm) {
+    newsletterForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      alert("¡Gracias por unirte a las Cartas de Mate! Te enviamos la bienvenida a tu correo.");
+      newsletterForm.reset();
+    });
+  }
+</script>
+</body>
+</html>
